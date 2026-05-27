@@ -1,0 +1,99 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #fafafa;
+  color: #09090b;
+}
+
+#root {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* ── React Flow overrides ────────────────────────── */
+.react-flow__node { font-size: 12px; }
+.react-flow__node-entity,
+.react-flow__node-attribute,
+.react-flow__node-relationship {
+  background: transparent !important;
+  border: none !important;
+}
+
+.react-flow__controls {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(63,63,70,0.5) !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.25) !important;
+}
+
+.react-flow__controls-button {
+  background: rgba(24,24,27,0.9) !important;
+  border-bottom: 1px solid rgba(63,63,70,0.4) !important;
+  fill: #a1a1aa !important;
+}
+.react-flow__controls-button:hover {
+  background: rgba(39,39,42,1) !important;
+  fill: #fafafa !important;
+}
+
+.react-flow__minimap {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(63,63,70,0.5) !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.25) !important;
+  background: rgba(24,24,27,0.85) !important;
+}
+
+.react-flow__panel.top.right button {
+  backdrop-filter: blur(16px);
+}
+
+/* ── Scrollbar ───────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(113,113,122,0.35);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(113,113,122,0.55);
+}
+
+/* ── Animations ──────────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}
+
+.animate-fade-in  { animation: fade-in 0.3s ease-out both; }
+.animate-pulse-dot { animation: pulse-dot 1.6s ease-in-out infinite; }
+
+/* ── Monaco override ─────────────────────────────── */
+.monaco-editor .margin,
+.monaco-editor .monaco-editor-background {
+  background: transparent !important;
+}
