@@ -49,7 +49,7 @@ CREATE TABLE order_items (
 );`,
   },
   {
-    name: 'Blog & Posts',
+    name: 'Blog',
     sql: `-- Blog Schema
 CREATE TABLE authors (
   id INT PRIMARY KEY,
@@ -133,64 +133,44 @@ const SQLEditor: React.FC<SQLEditorProps> = ({ onExecute, isLoading }) => {
         }
       `}
     >
-      {/* Top Header */}
-      <div className={`p-3 border-b ${isNeo ? 'border-black bg-[#FFE600]' : 'border-zinc-100 bg-zinc-50/70'}`}>
+      {/* Header with Title & Sample Presets */}
+      <div className={`p-3 border-b flex flex-col gap-2 ${isNeo ? 'border-black bg-[#FFE600]' : 'border-zinc-100 bg-zinc-50/70'}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className={`p-1.5 ${isNeo ? 'border border-black bg-white shadow-[1px_1px_0px_#000]' : 'rounded-lg bg-indigo-50 text-indigo-600'}`}>
               <FiCode className="w-3.5 h-3.5" />
             </div>
-            <div>
-              <h3 className={`text-xs ${isNeo ? 'font-black text-black' : 'font-bold text-zinc-900'}`}>
-                SQL Schema
-              </h3>
-            </div>
+            <h3 className={`text-xs ${isNeo ? 'font-black text-black' : 'font-bold text-zinc-900'}`}>
+              SQL Schema
+            </h3>
           </div>
 
-          <button
-            onClick={handleExecute}
-            disabled={isLoading}
-            className={`
-              flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold transition-all
-              ${
-                isNeo
-                  ? 'border-2 border-black bg-[#A6FAFF] text-black font-black shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none'
-                  : 'bg-zinc-900 hover:bg-black text-white rounded-xl shadow-2xs active:scale-95'
-              }
-              ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
-            `}
-          >
-            <HiSparkles className={`w-3.5 h-3.5 ${isNeo ? 'text-black' : 'text-indigo-400'}`} />
-            <span>{isLoading ? 'Generating...' : 'Generate ERD'}</span>
-          </button>
-        </div>
-
-        {/* Template pills */}
-        <div className="flex items-center gap-1.5 pt-2">
-          <span className={`text-[10px] uppercase font-bold tracking-wider ${isNeo ? 'text-black' : 'text-zinc-400'}`}>
-            Samples:
-          </span>
-          {TEMPLATES.map((tmpl) => (
-            <button
-              key={tmpl.name}
-              onClick={() => loadTemplate(tmpl.sql)}
-              className={`
-                text-[10px] font-bold px-2 py-0.5 transition-all
-                ${
-                  isNeo
-                    ? 'border border-black bg-white hover:bg-[#A6FAFF] text-black shadow-[1px_1px_0px_#000] active:translate-x-[1px]'
-                    : 'rounded-lg bg-white border border-zinc-200 text-zinc-600 hover:text-indigo-600 hover:border-indigo-200'
-                }
-              `}
-            >
-              {tmpl.name}
-            </button>
-          ))}
+          <div className="flex items-center gap-1.5">
+            <span className={`text-[10px] uppercase font-bold tracking-wider ${isNeo ? 'text-black' : 'text-zinc-400'}`}>
+              Presets:
+            </span>
+            {TEMPLATES.map((tmpl) => (
+              <button
+                key={tmpl.name}
+                onClick={() => loadTemplate(tmpl.sql)}
+                className={`
+                  text-[10px] font-bold px-2 py-0.5 transition-all
+                  ${
+                    isNeo
+                      ? 'border border-black bg-white hover:bg-[#A6FAFF] text-black shadow-[1px_1px_0px_#000] active:translate-x-[1px]'
+                      : 'rounded-lg bg-white border border-zinc-200 text-zinc-600 hover:text-indigo-600 hover:border-indigo-200'
+                  }
+                `}
+              >
+                {tmpl.name}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
       
       {/* Monaco Editor Container */}
-      <div className="flex-1 min-h-[340px]">
+      <div className="flex-1 min-h-[300px]">
         <Editor
           height="100%"
           defaultLanguage="sql"
@@ -207,6 +187,26 @@ const SQLEditor: React.FC<SQLEditorProps> = ({ onExecute, isLoading }) => {
             fontFamily: "'JetBrains Mono', 'Fira Code', Menlo, Monaco, 'Courier New', monospace",
           }}
         />
+      </div>
+
+      {/* Full-Width Prominent Generate Button at Bottom */}
+      <div className={`p-3 border-t ${isNeo ? 'border-black bg-white' : 'border-zinc-100 bg-zinc-50/50'}`}>
+        <button
+          onClick={handleExecute}
+          disabled={isLoading}
+          className={`
+            w-full py-2.5 text-xs font-bold flex items-center justify-center gap-2 transition-all
+            ${
+              isNeo
+                ? 'border-2 border-black bg-[#FFE600] text-black font-black shadow-[3px_3px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none'
+                : 'bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-xs active:scale-[0.99]'
+            }
+            ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
+          `}
+        >
+          <HiSparkles className={`w-4 h-4 ${isNeo ? 'text-black' : 'text-white'}`} />
+          <span>{isLoading ? 'Generating Chen ERD...' : 'Generate Chen ERD'}</span>
+        </button>
       </div>
     </motion.div>
   );

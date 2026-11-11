@@ -158,10 +158,10 @@ function ChenERDAppInner() {
   return (
     <div className={`h-screen flex flex-col font-sans selection:bg-indigo-100 selection:text-indigo-900 relative overflow-hidden ${isNeo ? 'bg-[#FFFDF5]' : 'bg-zinc-50'}`}>
       {/* Top Header */}
-      <header className={`h-13 px-4 md:px-5 flex items-center justify-between shrink-0 z-20 transition-all ${
+      <header className={`h-14 px-4 sm:px-6 md:px-8 w-full max-w-full box-border flex items-center justify-between shrink-0 z-30 transition-all ${
         isNeo
           ? 'bg-white border-b-2 border-black'
-          : 'bg-white/80 backdrop-blur-md border-b border-zinc-200/70'
+          : 'bg-white/90 backdrop-blur-md border-b border-zinc-200/80 shadow-xs'
       }`}>
         <div className="flex items-center gap-3">
           <button 
@@ -195,7 +195,7 @@ function ChenERDAppInner() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-2.5">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {activeError && (
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
@@ -224,7 +224,7 @@ function ChenERDAppInner() {
               className={`hidden sm:inline-flex items-center text-xs transition-all ${
                 isNeo
                   ? 'px-3 py-1.5 border-2 border-black bg-[#A6FAFF] text-black font-black shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none'
-                  : 'px-3 py-1.5 rounded-xl border border-zinc-200 text-zinc-700 hover:bg-zinc-100 font-semibold shadow-2xs active:scale-95'
+                  : 'px-3.5 py-1.5 rounded-xl border border-zinc-200 text-zinc-700 hover:bg-zinc-100 font-semibold shadow-2xs active:scale-95'
               }`}
             >
               Sample Data
@@ -243,7 +243,7 @@ function ChenERDAppInner() {
       </header>
 
       {/* Main Workspace Area */}
-      <div className="flex-1 flex relative overflow-hidden w-full h-[calc(100vh-52px)]">
+      <div className="flex-1 flex relative overflow-hidden w-full h-[calc(100vh-56px)]">
         {/* Mobile Backdrop */}
         {isMobileMenuOpen && (
           <div 
@@ -257,7 +257,7 @@ function ChenERDAppInner() {
           initial={{ x: -320, opacity: 0 }}
           animate={{ x: isMobileMenuOpen ? 0 : (window.innerWidth < 1024 ? -420 : 0), opacity: 1 }}
           transition={{ duration: 0.25, ease: 'easeOut' }}
-          className={`fixed lg:relative w-[85vw] max-w-[390px] lg:w-[390px] flex flex-col z-40 h-[calc(100vh-52px)] transition-all ${
+          className={`fixed lg:relative w-[85vw] max-w-[390px] lg:w-[390px] flex flex-col z-40 h-[calc(100vh-56px)] transition-all ${
             isNeo
               ? 'border-r-2 border-black bg-white shadow-2xl lg:shadow-none'
               : 'border-r border-zinc-200/70 bg-white/95 lg:bg-white/80 backdrop-blur-xl shadow-2xl lg:shadow-none'
@@ -318,7 +318,7 @@ function ChenERDAppInner() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: 320, opacity: 0 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
-              className={`fixed right-0 top-13 lg:relative lg:top-0 w-80 max-w-[85vw] z-30 h-[calc(100vh-52px)] ${
+              className={`fixed right-0 top-14 lg:relative lg:top-0 w-80 max-w-[85vw] z-30 h-[calc(100vh-56px)] ${
                 isNeo
                   ? 'border-l-2 border-black bg-white shadow-2xl lg:shadow-none'
                   : 'border-l border-zinc-200/70 bg-white/95 lg:bg-white/90 backdrop-blur-xl shadow-2xl lg:shadow-none'

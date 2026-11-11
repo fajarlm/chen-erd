@@ -69,7 +69,7 @@ const ThemeSelector: React.FC = () => {
             exit={{ opacity: 0, y: 6, scale: 0.96 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
             className={`
-              absolute right-0 top-10 w-56 z-50 overflow-hidden
+              absolute right-0 top-full mt-2 w-56 z-50 overflow-hidden
               ${
                 isNeo
                   ? 'bg-white border-2 border-black shadow-[4px_4px_0px_0px_#000]'

@@ -161,7 +161,7 @@ const ExportMenu: React.FC<ExportMenuProps> = ({ diagramRef, diagramData }) => {
             exit={{ opacity: 0, scale: 0.95, y: 8 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
             className={`
-              absolute top-11 right-0 w-64 z-50 overflow-hidden
+              absolute top-full mt-2 right-0 w-64 z-50 overflow-hidden
               ${
                 isNeo
                   ? 'bg-white border-2 border-black shadow-[4px_4px_0px_0px_#000]'

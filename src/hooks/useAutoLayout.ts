@@ -16,26 +16,26 @@ export const useAutoLayout = () => {
     const relationshipNodes = nodes.filter(n => n.type === 'relationship');
     const attributeNodes = nodes.filter(n => n.type === 'attribute');
 
-    // 1. Layout the Backbone: Entities & Relationships
+    // 1. Layout the Backbone: Entities & Relationships with generous spacing
     const g = new dagre.graphlib.Graph();
     g.setDefaultEdgeLabel(() => ({}));
     g.setGraph({
       rankdir: 'TB',
-      nodesep: 220,
-      ranksep: 240,
-      marginx: 80,
-      marginy: 80,
+      nodesep: 260,
+      ranksep: 280,
+      marginx: 100,
+      marginy: 100,
     });
 
     entityNodes.forEach((node) => {
-      g.setNode(node.id, { width: 180, height: 80 });
+      g.setNode(node.id, { width: 170, height: 70 });
     });
 
     relationshipNodes.forEach((node) => {
-      g.setNode(node.id, { width: 140, height: 140 });
+      g.setNode(node.id, { width: 140, height: 90 });
     });
 
-    // Only add edges between relationships and entities into dagre
+    // Edges between relationships and entities
     edges.forEach((edge) => {
       const isRelToEntity = 
         (relationshipNodes.some(r => r.id === edge.source) && entityNodes.some(e => e.id === edge.target)) ||
@@ -56,8 +56,8 @@ export const useAutoLayout = () => {
       const pos = g.node(node.id);
       if (pos) {
         updatedEntityMap.set(node.id, {
-          x: Math.round(pos.x - 90),
-          y: Math.round(pos.y - 40),
+          x: Math.round(pos.x - 85),
+          y: Math.round(pos.y - 35),
         });
       }
     });
@@ -66,17 +66,16 @@ export const useAutoLayout = () => {
       const pos = g.node(node.id);
       if (pos) {
         updatedRelationshipMap.set(node.id, {
-          x: Math.round(pos.x - 45),
-          y: Math.round(pos.y - 45),
+          x: Math.round(pos.x - 60),
+          y: Math.round(pos.y - 37),
         });
       }
     });
 
-    // 2. Position Attributes around their respective Entity or Relationship
-    // Find attribute-to-parent mappings via edges
+    // 2. Position Attributes away from connecting relationships so lines NEVER cross!
+    // Map each parent to its attributes
     const parentToAttrs = new Map<string, Node[]>();
     attributeNodes.forEach((attrNode) => {
-      // Find edge connecting this attribute to an entity or relationship
       const connectingEdge = edges.find(
         (e) => e.target === attrNode.id || e.source === attrNode.id
       );
@@ -91,27 +90,80 @@ export const useAutoLayout = () => {
 
     const updatedAttrMap = new Map<string, { x: number; y: number }>();
 
-    // Position entity attributes radially around entity
     parentToAttrs.forEach((attrs, parentId) => {
+      const isEntity = updatedEntityMap.has(parentId);
       const parentPos = updatedEntityMap.get(parentId) || updatedRelationshipMap.get(parentId);
       if (!parentPos) return;
 
       const total = attrs.length;
-      // Elliptical radius: wider horizontally because attributes are capsules
-      const rx = Math.max(160, total * 24);
-      const ry = Math.max(120, total * 18);
 
-      attrs.forEach((attr, idx) => {
-        // Distribute angles starting from top-left, going around
-        const angle = (2 * Math.PI * idx) / total - Math.PI / 2;
-        const attrX = Math.round(parentPos.x + 85 + rx * Math.cos(angle) - 50);
-        const attrY = Math.round(parentPos.y + 35 + ry * Math.sin(angle) - 20);
+      if (isEntity) {
+        // Find positions of relationships connected to this entity
+        const connectedRelPositions: { x: number; y: number }[] = [];
+        edges.forEach((edge) => {
+          if (edge.source === parentId && updatedRelationshipMap.has(edge.target)) {
+            connectedRelPositions.push(updatedRelationshipMap.get(edge.target)!);
+          } else if (edge.target === parentId && updatedRelationshipMap.has(edge.source)) {
+            connectedRelPositions.push(updatedRelationshipMap.get(edge.source)!);
+          }
+        });
 
-        updatedAttrMap.set(attr.id, { x: attrX, y: attrY });
-      });
+        // Determine which side has relationships
+        // If relationships are predominantly ABOVE (y < parentPos.y), fan attributes to BOTTOM/SIDES
+        const hasRelAbove = connectedRelPositions.some(p => p.y < parentPos.y);
+        const hasRelBelow = connectedRelPositions.some(p => p.y > parentPos.y);
+
+        let startAngle: number;
+        let endAngle: number;
+
+        if (hasRelAbove && !hasRelBelow) {
+          // Fan downwards: from Math.PI * 0.1 to Math.PI * 0.9 (bottom arc)
+          startAngle = Math.PI * 0.15;
+          endAngle = Math.PI * 0.85;
+        } else if (hasRelBelow && !hasRelAbove) {
+          // Fan upwards: from -Math.PI * 0.85 to -Math.PI * 0.15 (top arc)
+          startAngle = -Math.PI * 0.85;
+          endAngle = -Math.PI * 0.15;
+        } else {
+          // Fan evenly around but avoid the exact top corridor
+          startAngle = Math.PI * 0.2;
+          endAngle = Math.PI * 1.8;
+        }
+
+        const rx = Math.max(150, total * 25);
+        const ry = Math.max(110, total * 18);
+
+        attrs.forEach((attr, idx) => {
+          let angle: number;
+          if (total === 1) {
+            angle = (startAngle + endAngle) / 2;
+          } else {
+            angle = startAngle + ((endAngle - startAngle) * idx) / (total - 1);
+          }
+
+          const attrX = Math.round(parentPos.x + 85 + rx * Math.cos(angle) - 52);
+          const attrY = Math.round(parentPos.y + 35 + ry * Math.sin(angle) - 23);
+
+          updatedAttrMap.set(attr.id, { x: attrX, y: attrY });
+        });
+      } else {
+        // It's a Relationship node with associative attributes (e.g., quantity, unit_price)
+        // Position them vertically or horizontally offset from the diamond, away from entities
+        const rx = 140;
+        const ry = 80;
+
+        attrs.forEach((attr, idx) => {
+          // Offset to top or sides
+          const angle = -Math.PI / 2 + (idx % 2 === 0 ? -0.5 : 0.5) * (Math.floor(idx / 2) + 1);
+          const attrX = Math.round(parentPos.x + 60 + rx * Math.cos(angle) - 52);
+          const attrY = Math.round(parentPos.y + 37 + ry * Math.sin(angle) - 23);
+
+          updatedAttrMap.set(attr.id, { x: attrX, y: attrY });
+        });
+      }
     });
 
-    // 3. Assemble all updated nodes
+    // 3. Assemble all nodes with updated coordinates
     const layoutedNodes: Node[] = nodes.map((node) => {
       if (node.type === 'entity') {
         const pos = updatedEntityMap.get(node.id);
