@@ -1,12 +1,13 @@
 import { useCallback, useEffect } from 'react';
 import ReactFlow, {
   Background,
+  BackgroundVariant,
   Controls,
   MiniMap,
   useNodesState,
   useEdgesState,
   addEdge,
-  Panel,
+  useReactFlow,
 } from 'reactflow';
 import type {
   Node,
@@ -39,20 +40,23 @@ interface ChenDiagramProps {
   onNodeSelect?: (node: Node | null) => void;
   onUpdate?: (diagram: ChenDiagramType) => void;
   showGrid?: boolean;
+  showMinimap?: boolean;
 }
 
 const ChenDiagram: React.FC<ChenDiagramProps> = ({ 
   diagram, 
   onNodeSelect,
-  showGrid = true 
+  showGrid = true,
+  showMinimap = true,
 }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const { applyAutoLayout } = useAutoLayout();
+  const { fitView } = useReactFlow();
 
   // Convert Chen diagram to React Flow nodes and edges
   useEffect(() => {
-    if (!diagram) {
+    if (!diagram || (diagram.entities.length === 0 && diagram.relationships.length === 0)) {
       setNodes([]);
       setEdges([]);
       return;
@@ -74,16 +78,16 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({
         },
       });
 
-      // Position attributes around entity in an offset circle/star
+      // Position attributes around entity in an elliptical halo
       const totalAttrs = entity.attributes.length;
-      const radius = Math.max(140, totalAttrs * 20);
+      const rx = Math.max(160, totalAttrs * 22);
+      const ry = Math.max(120, totalAttrs * 16);
 
       entity.attributes.forEach((attr, index) => {
         const attrId = `${entity.id}-attr-${index}`;
-        // Spread angles evenly (avoiding strictly 0 or PI which align with relationships)
         const angle = (2 * Math.PI * index) / totalAttrs - Math.PI / 2;
-        const attrX = Math.round(entity.position.x + radius * Math.cos(angle));
-        const attrY = Math.round(entity.position.y + radius * Math.sin(angle));
+        const attrX = Math.round(entity.position.x + 85 + rx * Math.cos(angle) - 50);
+        const attrY = Math.round(entity.position.y + 35 + ry * Math.sin(angle) - 20);
 
         newNodes.push({
           id: attrId,
@@ -97,7 +101,7 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({
           },
         });
 
-        // Undirected simple line from entity to attribute in Chen ERD
+        // Line from entity to attribute
         newEdges.push({
           id: `edge-${entity.id}-${attrId}`,
           source: entity.id,
@@ -107,8 +111,8 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({
             isPrimaryKey: attr.isPrimaryKey,
           },
           style: {
-            stroke: attr.isPrimaryKey ? '#059669' : '#71717a',
-            strokeWidth: attr.isPrimaryKey ? 2 : 1.5,
+            stroke: attr.isPrimaryKey ? '#10b981' : '#94a3b8',
+            strokeWidth: attr.isPrimaryKey ? 1.8 : 1.2,
           },
         });
       });
@@ -142,7 +146,7 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({
             cardinality: cardinality,
           },
           style: {
-            stroke: '#7c3aed',
+            stroke: '#8b5cf6',
             strokeWidth: 2,
           },
         });
@@ -157,7 +161,7 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({
             type: 'attribute',
             position: {
               x: rel.position.x + 130,
-              y: rel.position.y + attrIndex * 60,
+              y: rel.position.y + attrIndex * 50,
             },
             data: {
               label: attr.name,
@@ -171,7 +175,7 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({
             target: attrId,
             type: 'custom',
             style: {
-              stroke: '#7c3aed',
+              stroke: '#a855f7',
               strokeWidth: 1.5,
               strokeDasharray: '4,4',
             },
@@ -182,7 +186,13 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({
 
     setNodes(newNodes);
     setEdges(newEdges);
-  }, [diagram, setNodes, setEdges]);
+
+    // Initial tidy layout & fit view
+    setTimeout(() => {
+      applyAutoLayout();
+      fitView({ duration: 500, padding: 0.2 });
+    }, 50);
+  }, [diagram, setNodes, setEdges]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -194,7 +204,7 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="w-full h-full overflow-hidden flex flex-1"
+      className="w-full h-full overflow-hidden flex flex-1 relative"
     >
       <ReactFlow
         nodes={nodes}
@@ -207,37 +217,42 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
-        className="w-full h-full bg-[#fafafa]"
+        className="w-full h-full bg-[#f8fafc]"
         minZoom={0.1}
         maxZoom={3}
       >
-        {showGrid && <Background gap={20} size={1.5} color="#e4e4e7" />}
-        <Controls showInteractive={false} />
-        <MiniMap
-          nodeColor={(node) => {
-            switch (node.type) {
-              case 'entity':
-                return '#2563eb';
-              case 'attribute':
-                return '#10b981';
-              case 'relationship':
-                return '#7c3aed';
-              default:
-                return '#a1a1aa';
-            }
-          }}
-          maskColor="rgba(240, 242, 245, 0.7)"
-          className="bg-white border border-zinc-200"
+        {showGrid && (
+          <Background
+            gap={24}
+            size={1.2}
+            color="#cbd5e1"
+            variant={BackgroundVariant.Dots}
+          />
+        )}
+        <Controls 
+          showInteractive={false} 
+          position="bottom-left"
+          className="!mb-6 !ml-6 !border !border-zinc-200/80 !rounded-xl !overflow-hidden !shadow-md"
         />
-        <Panel position="top-right">
-          <button
-            onClick={applyAutoLayout}
-            className="bg-zinc-900/90 hover:bg-zinc-900 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-1.5 backdrop-blur-md active:scale-95"
-          >
-            <span>✨</span>
-            <span>Auto Layout</span>
-          </button>
-        </Panel>
+        {showMinimap && (
+          <MiniMap
+            position="bottom-right"
+            nodeColor={(node) => {
+              switch (node.type) {
+                case 'entity':
+                  return '#2563eb';
+                case 'attribute':
+                  return '#10b981';
+                case 'relationship':
+                  return '#7c3aed';
+                default:
+                  return '#94a3b8';
+              }
+            }}
+            maskColor="rgba(241, 245, 249, 0.75)"
+            className="!mb-6 !mr-6 !rounded-2xl !overflow-hidden !border !border-zinc-200/80 !shadow-lg bg-white"
+          />
+        )}
       </ReactFlow>
     </motion.div>
   );

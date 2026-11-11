@@ -41,7 +41,7 @@ const CustomEdge = ({
             }}
             className="nodrag nopan flex items-center justify-center z-10"
           >
-            <div className="bg-white border-2 border-indigo-600 text-indigo-900 font-bold text-xs px-2 py-0.5 rounded-md shadow-sm min-w-[24px] text-center">
+            <div className="bg-white/95 border border-purple-300 text-purple-800 font-bold text-[11px] px-2 py-0.5 rounded-full shadow-xs min-w-[22px] text-center tracking-tight">
               {data.cardinality}
             </div>
           </div>

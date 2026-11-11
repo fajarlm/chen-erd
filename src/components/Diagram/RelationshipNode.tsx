@@ -16,32 +16,38 @@ interface RelationshipNodeProps {
 
 const RelationshipNode = memo(({ data }: RelationshipNodeProps) => {
   return (
-    <div className="relative select-none flex items-center justify-center p-2">
-      <Handle type="target" position={Position.Top} id="top-target" className="opacity-0 w-2 h-2" />
-      <Handle type="source" position={Position.Top} id="top-source" className="opacity-0 w-2 h-2" />
-      <Handle type="target" position={Position.Bottom} id="bottom-target" className="opacity-0 w-2 h-2" />
-      <Handle type="source" position={Position.Bottom} id="bottom-source" className="opacity-0 w-2 h-2" />
-      <Handle type="target" position={Position.Left} id="left-target" className="opacity-0 w-2 h-2" />
-      <Handle type="source" position={Position.Left} id="left-source" className="opacity-0 w-2 h-2" />
-      <Handle type="target" position={Position.Right} id="right-target" className="opacity-0 w-2 h-2" />
-      <Handle type="source" position={Position.Right} id="right-source" className="opacity-0 w-2 h-2" />
+    <div className="group relative select-none flex items-center justify-center p-2">
+      {/* 4 Handles at the diamond points */}
+      <Handle type="target" position={Position.Top} id="top-target" className="!w-2 !h-2 !bg-purple-600 !border-white !border-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Handle type="source" position={Position.Top} id="top-source" className="!w-2 !h-2 !bg-purple-600 !border-white !border-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Handle type="target" position={Position.Bottom} id="bottom-target" className="!w-2 !h-2 !bg-purple-600 !border-white !border-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Handle type="source" position={Position.Bottom} id="bottom-source" className="!w-2 !h-2 !bg-purple-600 !border-white !border-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Handle type="target" position={Position.Left} id="left-target" className="!w-2 !h-2 !bg-purple-600 !border-white !border-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Handle type="source" position={Position.Left} id="left-source" className="!w-2 !h-2 !bg-purple-600 !border-white !border-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Handle type="target" position={Position.Right} id="right-target" className="!w-2 !h-2 !bg-purple-600 !border-white !border-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Handle type="source" position={Position.Right} id="right-source" className="!w-2 !h-2 !bg-purple-600 !border-white !border-2 opacity-0 group-hover:opacity-100 transition-opacity" />
 
-      {/* Diamond Shape */}
+      {/* Modern Diamond Shape */}
       <div
         className={`
-          w-24 h-24 flex items-center justify-center
-          rotate-45 bg-white shadow-md transition-shadow hover:shadow-lg
-          ${data.isIdentifying 
-            ? 'border-4 border-double border-purple-600 bg-purple-50/20' 
-            : 'border-2 border-purple-600'}
+          w-22 h-22 flex items-center justify-center
+          rotate-45 rounded-lg bg-gradient-to-br from-purple-50/60 to-white
+          shadow-xs hover:shadow-md transition-all duration-200
+          ${
+            data.isIdentifying
+              ? 'border-4 border-double border-purple-600'
+              : 'border-2 border-purple-600 hover:border-purple-700'
+          }
         `}
       >
-        <div className="-rotate-45 text-center px-1 flex flex-col items-center justify-center">
-          <span className="font-semibold text-xs text-purple-950 leading-tight line-clamp-2 max-w-[65px] break-words">
+        <div className="-rotate-45 text-center px-1.5 flex flex-col items-center justify-center">
+          <span className="font-bold text-[11px] text-purple-950 uppercase tracking-wider leading-snug line-clamp-2 max-w-[62px] break-words">
             {data.label}
           </span>
           {data.isIdentifying && (
-            <span className="text-[9px] text-purple-600 font-medium mt-0.5">ID</span>
+            <span className="text-[8px] font-bold text-purple-600 uppercase mt-0.5 tracking-tighter">
+              Identifying
+            </span>
           )}
         </div>
       </div>

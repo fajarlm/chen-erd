@@ -122,15 +122,15 @@ const ExportMenu: React.FC<ExportMenuProps> = ({ diagramRef, diagramData }) => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          flex items-center space-x-2 px-4 py-2 rounded-full
-          transition-all duration-200 font-semibold text-sm
+          flex items-center gap-1.5 px-3 py-1.5 rounded-xl
+          transition-all duration-200 font-semibold text-xs
           ${isOpen
-            ? 'bg-zinc-800 text-white shadow-md'
-            : 'bg-white text-zinc-700 border border-zinc-200/80 hover:bg-zinc-50 hover:border-zinc-300 shadow-sm'
+            ? 'bg-zinc-900 text-white shadow-xs'
+            : 'bg-white text-zinc-700 border border-zinc-200/80 hover:bg-zinc-50 shadow-2xs'
           }
         `}
       >
-        <FiDownload className="w-4 h-4" />
+        <FiDownload className="w-3.5 h-3.5" />
         <span>Export</span>
       </button>
 

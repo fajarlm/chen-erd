@@ -1,180 +1,151 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import {
-    FiZoomIn,
-    FiZoomOut,
-    FiMaximize,
-    FiGrid,
-    FiTrash2,
-    FiCopy,
-    FiRotateCw,
-    FiPlus,
-    FiMinus,
-    FiSettings,
+  FiZoomIn,
+  FiZoomOut,
+  FiMaximize,
+  FiGrid,
+  FiTrash2,
+  FiMap,
 } from 'react-icons/fi';
+import { HiSparkles } from 'react-icons/hi';
 
 interface ToolbarProps {
-    onZoomIn: () => void;
-    onZoomOut: () => void;
-    onFitView: () => void;
-    onToggleGrid: () => void;
-    onClearCanvas: () => void;
-    onUndo?: () => void;
-    onRedo?: () => void;
-    onAddEntity?: () => void;
-    showGrid: boolean;
-    zoom: number;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+  onFitView: () => void;
+  onToggleGrid: () => void;
+  onClearCanvas: () => void;
+  onAutoLayout?: () => void;
+  onToggleMinimap?: () => void;
+  showGrid: boolean;
+  showMinimap?: boolean;
+  zoom: number;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
-    onZoomIn,
-    onZoomOut,
-    onFitView,
-    onToggleGrid,
-    onClearCanvas,
-    onUndo,
-    onRedo,
-    onAddEntity,
-    showGrid,
-    zoom,
+  onZoomIn,
+  onZoomOut,
+  onFitView,
+  onToggleGrid,
+  onClearCanvas,
+  onAutoLayout,
+  onToggleMinimap,
+  showGrid,
+  showMinimap = true,
+  zoom,
 }) => {
-    const [showTooltips, setShowTooltips] = useState(true);
+  return (
+    <motion.aside
+      initial={{ y: 20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
+      className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30"
+      aria-label="Canvas controls"
+    >
+      <nav 
+        aria-label="Canvas tool navigation"
+        className="flex items-center gap-1.5 p-1.5 bg-white/90 backdrop-blur-xl border border-zinc-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.08)] rounded-2xl text-zinc-700"
+      >
+        {/* Auto Layout Button */}
+        {onAutoLayout && (
+          <>
+            <button
+              onClick={onAutoLayout}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100/80 text-indigo-700 text-xs font-semibold rounded-xl transition-all active:scale-95 shadow-xs"
+              title="Organize diagram automatically"
+            >
+              <HiSparkles className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Auto Layout</span>
+            </button>
+            <div className="h-5 w-px bg-zinc-200/80 mx-0.5" />
+          </>
+        )}
 
-    const tools = [
-        {
-            icon: FiPlus,
-            label: 'Add Entity',
-            action: onAddEntity,
-            shortcut: 'Ctrl+A',
-            color: 'text-green-600 hover:bg-green-50',
-        },
-        {
-            icon: FiZoomIn,
-            label: 'Zoom In',
-            action: onZoomIn,
-            shortcut: 'Ctrl++',
-            color: 'text-blue-600 hover:bg-blue-50',
-        },
-        {
-            icon: FiZoomOut,
-            label: 'Zoom Out',
-            action: onZoomOut,
-            shortcut: 'Ctrl+-',
-            color: 'text-blue-600 hover:bg-blue-50',
-        },
-        {
-            icon: FiMaximize,
-            label: 'Fit View',
-            action: onFitView,
-            shortcut: 'Ctrl+F',
-            color: 'text-gray-600 hover:bg-gray-50',
-        },
-        {
-            icon: FiGrid,
-            label: 'Toggle Grid',
-            action: onToggleGrid,
-            shortcut: 'Ctrl+G',
-            color: showGrid ? 'text-blue-600 hover:bg-blue-50' : 'text-gray-600 hover:bg-gray-50',
-        },
-        {
-            icon: FiRotateCw,
-            label: 'Undo',
-            action: onUndo,
-            shortcut: 'Ctrl+Z',
-            color: 'text-gray-600 hover:bg-gray-50',
-        },
-        {
-            icon: FiCopy,
-            label: 'Redo',
-            action: onRedo,
-            shortcut: 'Ctrl+Y',
-            color: 'text-gray-600 hover:bg-gray-50',
-        },
-        {
-            icon: FiTrash2,
-            label: 'Clear Canvas',
-            action: onClearCanvas,
-            shortcut: 'Del',
-            color: 'text-red-600 hover:bg-red-50',
-        },
-    ];
+        {/* Zoom Controls */}
+        <div className="flex items-center bg-zinc-100/80 rounded-xl px-1">
+          <button
+            onClick={onZoomOut}
+            className="p-1.5 hover:bg-white hover:text-zinc-900 rounded-lg text-zinc-600 transition-all active:scale-90"
+            title="Zoom Out (Ctrl -)"
+            aria-label="Zoom Out"
+          >
+            <FiZoomOut className="w-3.5 h-3.5" />
+          </button>
+          
+          <button
+            onClick={onFitView}
+            className="px-2 py-1 text-[11px] font-semibold text-zinc-700 hover:text-zinc-950 transition-colors tabular-nums min-w-[46px] text-center"
+            title="Reset to 100% / Fit View"
+          >
+            {Math.round(zoom * 100)}%
+          </button>
 
-    return (
-        <motion.div
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="bg-white border-b shadow-sm"
+          <button
+            onClick={onZoomIn}
+            className="p-1.5 hover:bg-white hover:text-zinc-900 rounded-lg text-zinc-600 transition-all active:scale-90"
+            title="Zoom In (Ctrl +)"
+            aria-label="Zoom In"
+          >
+            <FiZoomIn className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <button
+          onClick={onFitView}
+          className="p-2 hover:bg-zinc-100 hover:text-zinc-900 text-zinc-600 rounded-xl transition-all active:scale-90"
+          title="Fit view to all nodes (Ctrl F)"
+          aria-label="Fit View"
         >
-            <div className="px-4 py-2">
-                <div className="flex items-center justify-between">
-                    {/* Left tools */}
-                    <div className="flex items-center space-x-1">
-                        {tools.map((tool, index) => (
-                            <div key={index} className="relative group">
-                                <button
-                                    onClick={tool.action}
-                                    disabled={!tool.action}
-                                    className={`p-2 rounded-lg transition-colors duration-200 ${tool.color
-                                        } ${!tool.action ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    title={tool.label}
-                                >
-                                    <tool.icon className="w-5 h-5" />
-                                </button>
+          <FiMaximize className="w-4 h-4" />
+        </button>
 
-                                {/* Tooltip */}
-                                {showTooltips && (
-                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                                        {tool.label}
-                                        {tool.shortcut && (
-                                            <span className="ml-1 text-gray-400">({tool.shortcut})</span>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
+        <div className="h-5 w-px bg-zinc-200/80 mx-0.5" />
 
-                    {/* Center info */}
-                    <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-2 text-sm text-gray-600">
-                            <FiSettings className="w-4 h-4" />
-                            <span>Zoom: {Math.round(zoom * 100)}%</span>
-                        </div>
-                        <div className="h-4 w-px bg-gray-300" />
-                        <div className="text-sm text-gray-600">
-                            {showGrid ? 'Grid: On' : 'Grid: Off'}
-                        </div>
-                    </div>
+        {/* Grid Toggle */}
+        <button
+          onClick={onToggleGrid}
+          className={`p-2 rounded-xl transition-all active:scale-90 ${
+            showGrid
+              ? 'bg-zinc-900 text-white shadow-xs'
+              : 'hover:bg-zinc-100 text-zinc-600'
+          }`}
+          title={showGrid ? 'Hide Background Grid' : 'Show Background Grid'}
+          aria-label="Toggle Grid"
+        >
+          <FiGrid className="w-4 h-4" />
+        </button>
 
-                    {/* Right actions */}
-                    <div className="flex items-center space-x-2">
-                        <button
-                            onClick={() => setShowTooltips(!showTooltips)}
-                            className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${showTooltips
-                                ? 'bg-blue-100 text-blue-700'
-                                : 'bg-gray-100 text-gray-700'
-                                }`}
-                        >
-                            {showTooltips ? 'Hide Tips' : 'Show Tips'}
-                        </button>
-                    </div>
-                </div>
-            </div>
+        {/* Minimap Toggle */}
+        {onToggleMinimap && (
+          <button
+            onClick={onToggleMinimap}
+            className={`p-2 rounded-xl transition-all active:scale-90 ${
+              showMinimap
+                ? 'bg-zinc-100 text-zinc-900'
+                : 'hover:bg-zinc-100 text-zinc-400'
+            }`}
+            title={showMinimap ? 'Hide MiniMap' : 'Show MiniMap'}
+            aria-label="Toggle MiniMap"
+          >
+            <FiMap className="w-4 h-4" />
+          </button>
+        )}
 
-            {/* Quick Actions Bar */}
-            <div className="px-4 py-1.5 bg-gray-50 border-t">
-                <div className="flex items-center space-x-4 text-xs text-gray-500">
-                    <span>💡 Tip: Drag nodes to rearrange</span>
-                    <span>•</span>
-                    <span>🖱 Scroll to zoom</span>
-                    <span>•</span>
-                    <span>🔄 Right-click for context menu</span>
-                    <span>•</span>
-                    <span>⌨ Ctrl+C/V to copy/paste</span>
-                </div>
-            </div>
-        </motion.div>
-    );
+        <div className="h-5 w-px bg-zinc-200/80 mx-0.5" />
+
+        {/* Clear Canvas */}
+        <button
+          onClick={onClearCanvas}
+          className="p-2 hover:bg-rose-50 hover:text-rose-600 text-zinc-400 rounded-xl transition-all active:scale-90"
+          title="Clear diagram"
+          aria-label="Clear Canvas"
+        >
+          <FiTrash2 className="w-4 h-4" />
+        </button>
+      </nav>
+    </motion.aside>
+  );
 };
 
-export default Toolbar;
+export default React.memo(Toolbar);

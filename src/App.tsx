@@ -7,6 +7,43 @@ import PropertiesPanel from './components/Layout/PropertiesPanel';
 import Toolbar from './components/UI/Toolbar';
 import ExportMenu from './components/UI/ExportMenu';
 import { useDiagramState } from './hooks/useDiagramState';
+import { useAutoLayout } from './hooks/useAutoLayout';
+import { FiLayers, FiMenu, FiX } from 'react-icons/fi';
+
+const SAMPLE_SQL = `-- E-Commerce Sample Schema
+CREATE TABLE users (
+  id INT PRIMARY KEY,
+  username VARCHAR(50),
+  email VARCHAR(100),
+  created_at TIMESTAMP
+);
+
+CREATE TABLE categories (
+  id INT PRIMARY KEY,
+  name VARCHAR(50)
+);
+
+CREATE TABLE products (
+  id INT PRIMARY KEY,
+  title VARCHAR(150),
+  price DECIMAL,
+  category_id INT REFERENCES categories(id)
+);
+
+CREATE TABLE orders (
+  id INT PRIMARY KEY,
+  user_id INT REFERENCES users(id),
+  total_amount DECIMAL,
+  order_date DATE
+);
+
+CREATE TABLE order_items (
+  order_id INT REFERENCES orders(id),
+  product_id INT REFERENCES products(id),
+  quantity INT,
+  unit_price DECIMAL,
+  PRIMARY KEY (order_id, product_id)
+);`;
 
 function ChenERDAppInner() {
   const {
@@ -22,12 +59,14 @@ function ChenERDAppInner() {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [sidebarTab, setSidebarTab] = useState<'sql' | 'form' | 'entities'>('sql');
   const [showGrid, setShowGrid] = useState(true);
+  const [showMinimap, setShowMinimap] = useState(true);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [dismissedError, setDismissedError] = useState(false);
 
   const diagramRef = useRef<HTMLDivElement>(null);
   const { zoomIn, zoomOut, fitView, getZoom } = useReactFlow();
+  const { applyAutoLayout } = useAutoLayout();
 
   const handleZoomIn = useCallback(() => {
     zoomIn({ duration: 250 });
@@ -48,6 +87,10 @@ function ChenERDAppInner() {
     setShowGrid(prev => !prev);
   }, []);
 
+  const handleToggleMinimap = useCallback(() => {
+    setShowMinimap(prev => !prev);
+  }, []);
+
   const handleClearCanvas = useCallback(() => {
     if (window.confirm('Are you sure you want to clear the canvas?')) {
       clearDiagram();
@@ -55,13 +98,10 @@ function ChenERDAppInner() {
     }
   }, [clearDiagram]);
 
-  const handleAddEntity = useCallback(() => {
-    // Switch to visual builder tab so the user can easily define a new entity
-    setSidebarTab('form');
-    if (window.innerWidth < 1024) {
-      setIsMobileMenuOpen(true);
-    }
-  }, []);
+  const handleLoadSample = useCallback(() => {
+    setDismissedError(false);
+    generateFromSQL(SAMPLE_SQL);
+  }, [generateFromSQL]);
 
   const handleUpdateNode = useCallback((updatedNode: Node) => {
     if (!diagram) return;
@@ -79,7 +119,6 @@ function ChenERDAppInner() {
         if (r.id === updatedNode.id) {
           const cardinalities = { ...r.cardinalities };
           if (newCardinality && r.entities.length > 0) {
-            // Update cardinality for connected entity
             const targetEntityId = r.entities[r.entities.length - 1];
             cardinalities[targetEntityId] = newCardinality;
           }
@@ -96,7 +135,6 @@ function ChenERDAppInner() {
       const updatedEntities = diagram.entities.map(e => ({
         ...e,
         attributes: e.attributes.map(attr => {
-          // If attribute ID matches
           if (updatedNode.id.includes(e.id)) {
             return { ...attr, name: newLabel || attr.name };
           }
@@ -110,146 +148,155 @@ function ChenERDAppInner() {
   }, [diagram, updateDiagram]);
 
   const activeError = !dismissedError && error;
+  const hasDiagram = diagram && (diagram.entities.length > 0 || diagram.relationships.length > 0);
 
   return (
-    <div className="h-screen flex bg-zinc-50 font-sans selection:bg-indigo-100 selection:text-indigo-900 relative overflow-hidden">
-      {/* Mobile backdrop */}
-      {isMobileMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-30 lg:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
+    <div className="h-screen flex flex-col bg-zinc-50 font-sans selection:bg-indigo-100 selection:text-indigo-900 relative overflow-hidden">
+      {/* Top Navigation Bar */}
+      <header className="h-13 bg-white/80 backdrop-blur-md border-b border-zinc-200/70 px-4 md:px-5 flex items-center justify-between shrink-0 z-20">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="lg:hidden p-1.5 -ml-1 text-zinc-600 hover:bg-zinc-100 rounded-xl transition-colors"
+            aria-label="Toggle navigation menu"
+          >
+            {isMobileMenuOpen ? <FiX className="w-5 h-5" /> : <FiMenu className="w-5 h-5" />}
+          </button>
 
-      {/* Left Sidebar */}
-      <motion.div
-        initial={{ x: -320, opacity: 0 }}
-        animate={{ x: isMobileMenuOpen ? 0 : (window.innerWidth < 1024 ? -420 : 0), opacity: 1 }}
-        transition={{ duration: 0.3, ease: 'easeOut' }}
-        className={`fixed lg:relative w-[85vw] max-w-[400px] lg:w-96 border-r border-zinc-200/80 bg-white/95 lg:bg-white/90 backdrop-blur-xl flex flex-col shadow-2xl lg:shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-40 h-full ${
-          isMobileMenuOpen ? 'left-0' : '-left-full lg:left-0'
-        }`}
-      >
-        <Sidebar
-          activeTab={sidebarTab}
-          onTabChange={setSidebarTab}
-          onSQLExecute={(sql) => {
-            setDismissedError(false);
-            generateFromSQL(sql);
-            if (window.innerWidth < 1024) setIsMobileMenuOpen(false);
-          }}
-          onFormSubmit={(tables) => {
-            setDismissedError(false);
-            generateFromTables(tables);
-            if (window.innerWidth < 1024) setIsMobileMenuOpen(false);
-          }}
-          isLoading={isLoading}
-          diagram={diagram}
-        />
-      </motion.div>
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col relative overflow-hidden w-full h-full">
-        {/* Header */}
-        <motion.header
-          initial={{ y: -40, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.3, ease: 'easeOut' }}
-          className="bg-white/80 backdrop-blur-lg border-b border-zinc-200/80 px-4 md:px-6 py-3 z-20 flex items-center justify-between gap-3 shadow-xs"
-        >
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden p-2 -ml-1 text-zinc-600 hover:bg-zinc-100 rounded-xl transition-colors"
-              aria-label="Open navigation menu"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <h1 className="text-lg md:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 to-zinc-600 tracking-tight">
-                  Chen ERD Generator
-                </h1>
-              </div>
-              <p className="text-xs text-zinc-500 font-medium hidden sm:block mt-0.5">
-                Generate Peter Chen Entity-Relationship Diagrams from SQL & Visual Forms
-              </p>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-500 text-white flex items-center justify-center shadow-xs">
+              <FiLayers className="w-4 h-4" />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-sm text-zinc-900 tracking-tight">Chen ERD</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-600 border border-indigo-100">
+                Studio
+              </span>
             </div>
           </div>
+        </div>
 
-          <div className="flex items-center gap-2 md:gap-3">
-            {activeError && (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-rose-50 text-rose-700 px-3 py-1.5 rounded-xl text-xs flex items-center gap-2 border border-rose-200/60 shadow-xs"
+        <div className="flex items-center gap-2.5">
+          {activeError && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-rose-50 text-rose-700 px-3 py-1 rounded-xl text-xs flex items-center gap-2 border border-rose-200/60 shadow-2xs"
+            >
+              <span className="font-bold text-rose-500">✕</span>
+              <span className="font-medium truncate max-w-[180px] md:max-w-[320px]">{activeError}</span>
+              <button
+                onClick={() => setDismissedError(true)}
+                className="ml-1 text-rose-400 hover:text-rose-700 font-bold"
+                aria-label="Dismiss error"
               >
-                <span className="font-bold text-rose-500">✕</span>
-                <span className="font-medium truncate max-w-[160px] md:max-w-[300px]">{activeError}</span>
-                <button
-                  onClick={() => setDismissedError(true)}
-                  className="ml-1 text-rose-400 hover:text-rose-700 font-bold transition-colors"
-                  aria-label="Dismiss error"
-                >
-                  ×
-                </button>
-              </motion.div>
-            )}
+                ×
+              </button>
+            </motion.div>
+          )}
 
-            {/* Export Menu */}
-            <ExportMenu
-              diagramRef={diagramRef}
-              diagramData={diagram}
-            />
-          </div>
-        </motion.header>
+          {!hasDiagram && (
+            <button
+              onClick={handleLoadSample}
+              className="hidden sm:inline-flex items-center text-xs font-semibold px-3 py-1.5 rounded-xl border border-zinc-200 text-zinc-700 hover:bg-zinc-100 transition-all active:scale-95"
+            >
+              Sample Data
+            </button>
+          )}
 
-        {/* Toolbar */}
-        <Toolbar
-          onZoomIn={handleZoomIn}
-          onZoomOut={handleZoomOut}
-          onFitView={handleFitView}
-          onToggleGrid={handleToggleGrid}
-          onClearCanvas={handleClearCanvas}
-          onAddEntity={handleAddEntity}
-          showGrid={showGrid}
-          zoom={zoomLevel}
-        />
+          <ExportMenu
+            diagramRef={diagramRef}
+            diagramData={diagram}
+          />
+        </div>
+      </header>
 
-        {/* Diagram Canvas */}
-        <div ref={diagramRef} className="flex-1 bg-[#FAFAFA] relative overflow-hidden flex flex-col">
+      {/* Main Workspace Area */}
+      <div className="flex-1 flex relative overflow-hidden w-full h-[calc(100vh-52px)]">
+        {/* Mobile Backdrop */}
+        {isMobileMenuOpen && (
+          <div 
+            className="fixed inset-0 bg-black/30 backdrop-blur-xs z-30 lg:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        )}
+
+        {/* Left Sidebar */}
+        <motion.div
+          initial={{ x: -320, opacity: 0 }}
+          animate={{ x: isMobileMenuOpen ? 0 : (window.innerWidth < 1024 ? -420 : 0), opacity: 1 }}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
+          className={`fixed lg:relative w-[85vw] max-w-[390px] lg:w-[390px] border-r border-zinc-200/70 bg-white/95 lg:bg-white/80 backdrop-blur-xl flex flex-col shadow-2xl lg:shadow-none z-40 h-[calc(100vh-52px)] ${
+            isMobileMenuOpen ? 'left-0' : '-left-full lg:left-0'
+          }`}
+        >
+          <Sidebar
+            activeTab={sidebarTab}
+            onTabChange={setSidebarTab}
+            onSQLExecute={(sql) => {
+              setDismissedError(false);
+              generateFromSQL(sql);
+              if (window.innerWidth < 1024) setIsMobileMenuOpen(false);
+            }}
+            onFormSubmit={(tables) => {
+              setDismissedError(false);
+              generateFromTables(tables);
+              if (window.innerWidth < 1024) setIsMobileMenuOpen(false);
+            }}
+            isLoading={isLoading}
+            diagram={diagram}
+          />
+        </motion.div>
+
+        {/* Canvas Workspace */}
+        <div ref={diagramRef} className="flex-1 bg-[#f8fafc] relative overflow-hidden flex flex-col h-full">
           <MainContent
             diagram={diagram}
             isLoading={isLoading}
             onNodeSelect={setSelectedNode}
             onDiagramUpdate={updateDiagram}
+            onLoadSample={handleLoadSample}
             showGrid={showGrid}
+            showMinimap={showMinimap}
           />
-        </div>
-      </div>
 
-      {/* Right Properties Panel */}
-      <AnimatePresence>
-        {selectedNode && (
-          <motion.div
-            initial={{ x: 320, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 320, opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="fixed right-0 top-0 lg:relative w-80 max-w-[85vw] border-l border-zinc-200/80 bg-white/95 lg:bg-white/90 backdrop-blur-xl shadow-[-4px_0_24px_rgba(0,0,0,0.06)] z-30 h-full"
-          >
-            <PropertiesPanel
-              key={selectedNode.id}
-              node={selectedNode}
-              onClose={() => setSelectedNode(null)}
-              onUpdate={handleUpdateNode}
+          {/* Floating Toolbar Dock at bottom center */}
+          {hasDiagram && (
+            <Toolbar
+              onZoomIn={handleZoomIn}
+              onZoomOut={handleZoomOut}
+              onFitView={handleFitView}
+              onToggleGrid={handleToggleGrid}
+              onClearCanvas={handleClearCanvas}
+              onAutoLayout={applyAutoLayout}
+              onToggleMinimap={handleToggleMinimap}
+              showGrid={showGrid}
+              showMinimap={showMinimap}
+              zoom={zoomLevel}
             />
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </div>
+
+        {/* Right Properties Panel */}
+        <AnimatePresence>
+          {selectedNode && (
+            <motion.div
+              initial={{ x: 320, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 320, opacity: 0 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="fixed right-0 top-13 lg:relative lg:top-0 w-80 max-w-[85vw] border-l border-zinc-200/70 bg-white/95 lg:bg-white/90 backdrop-blur-xl shadow-2xl lg:shadow-none z-30 h-[calc(100vh-52px)]"
+            >
+              <PropertiesPanel
+                key={selectedNode.id}
+                node={selectedNode}
+                onClose={() => setSelectedNode(null)}
+                onUpdate={handleUpdateNode}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
