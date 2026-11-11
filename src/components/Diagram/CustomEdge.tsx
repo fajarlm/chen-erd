@@ -1,4 +1,3 @@
-import React from 'react';
 import { BaseEdge, EdgeLabelRenderer, getBezierPath } from 'reactflow';
 import type { EdgeProps } from 'reactflow';
 
@@ -38,12 +37,13 @@ const CustomEdge = ({
             style={{
               position: 'absolute',
               transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-              fontSize: 12,
-              pointerEvents: 'all',
+              pointerEvents: 'none',
             }}
-            className="nodrag nopan bg-white border border-gray-300 rounded-full w-6 h-6 flex items-center justify-center font-bold text-blue-600"
+            className="nodrag nopan flex items-center justify-center z-10"
           >
-            {data.cardinality}
+            <div className="bg-white border-2 border-indigo-600 text-indigo-900 font-bold text-xs px-2 py-0.5 rounded-md shadow-sm min-w-[24px] text-center">
+              {data.cardinality}
+            </div>
           </div>
         </EdgeLabelRenderer>
       )}

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -6,7 +6,6 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
   addEdge,
-  MarkerType,
   Panel,
 } from 'reactflow';
 import type {
@@ -37,22 +36,32 @@ const edgeTypes: EdgeTypes = {
 
 interface ChenDiagramProps {
   diagram: ChenDiagramType | null;
+  onNodeSelect?: (node: Node | null) => void;
   onUpdate?: (diagram: ChenDiagramType) => void;
+  showGrid?: boolean;
 }
 
-const ChenDiagram: React.FC<ChenDiagramProps> = ({ diagram, onUpdate }) => {
+const ChenDiagram: React.FC<ChenDiagramProps> = ({ 
+  diagram, 
+  onNodeSelect,
+  showGrid = true 
+}) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const { applyAutoLayout } = useAutoLayout();
 
   // Convert Chen diagram to React Flow nodes and edges
-  useMemo(() => {
-    if (!diagram) return;
+  useEffect(() => {
+    if (!diagram) {
+      setNodes([]);
+      setEdges([]);
+      return;
+    }
 
     const newNodes: Node[] = [];
     const newEdges: Edge[] = [];
 
-    // Create entity nodes
+    // 1. Create entity nodes and their attribute nodes
     diagram.entities.forEach(entity => {
       newNodes.push({
         id: entity.id,
@@ -65,26 +74,30 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({ diagram, onUpdate }) => {
         },
       });
 
-      // Create attribute nodes for each entity
+      // Position attributes around entity in an offset circle/star
+      const totalAttrs = entity.attributes.length;
+      const radius = Math.max(140, totalAttrs * 20);
+
       entity.attributes.forEach((attr, index) => {
         const attrId = `${entity.id}-attr-${index}`;
+        // Spread angles evenly (avoiding strictly 0 or PI which align with relationships)
+        const angle = (2 * Math.PI * index) / totalAttrs - Math.PI / 2;
+        const attrX = Math.round(entity.position.x + radius * Math.cos(angle));
+        const attrY = Math.round(entity.position.y + radius * Math.sin(angle));
+
         newNodes.push({
           id: attrId,
           type: 'attribute',
-          position: {
-            x: entity.position.x - 150,
-            y: entity.position.y + index * 80,
-          },
+          position: { x: attrX, y: attrY },
           data: {
             label: attr.name,
             isPrimaryKey: attr.isPrimaryKey,
             isMultivalued: attr.isMultivalued,
             isDerived: attr.isDerived,
           },
-          parentNode: entity.id,
         });
 
-        // Edge from entity to attribute
+        // Undirected simple line from entity to attribute in Chen ERD
         newEdges.push({
           id: `edge-${entity.id}-${attrId}`,
           source: entity.id,
@@ -94,19 +107,19 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({ diagram, onUpdate }) => {
             isPrimaryKey: attr.isPrimaryKey,
           },
           style: {
-            stroke: attr.isPrimaryKey ? '#2563eb' : '#10b981',
-            strokeWidth: attr.isPrimaryKey ? 2 : 1,
+            stroke: attr.isPrimaryKey ? '#059669' : '#71717a',
+            strokeWidth: attr.isPrimaryKey ? 2 : 1.5,
           },
         });
       });
     });
 
-    // Create relationship nodes
-    diagram.relationships.forEach((rel, index) => {
+    // 2. Create relationship nodes
+    diagram.relationships.forEach((rel) => {
       newNodes.push({
         id: rel.id,
         type: 'relationship',
-        position: rel.position || { x: 300, y: 300 + index * 100 },
+        position: rel.position || { x: 300, y: 300 },
         data: {
           label: rel.name,
           cardinalities: rel.cardinalities,
@@ -115,8 +128,8 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({ diagram, onUpdate }) => {
         },
       });
 
-      // Create edges between entities and relationship
-      rel.entities.forEach((entityId, entityIndex) => {
+      // Create edges between relationship and entities
+      rel.entities.forEach((entityId) => {
         const cardinality = rel.cardinalities[entityId] || '1';
         const edgeId = `edge-${rel.id}-${entityId}`;
         
@@ -132,13 +145,10 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({ diagram, onUpdate }) => {
             stroke: '#7c3aed',
             strokeWidth: 2,
           },
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-          },
         });
       });
 
-      // Add relationship attributes if any
+      // Relationship attributes (if any)
       if (rel.attributes) {
         rel.attributes.forEach((attr, attrIndex) => {
           const attrId = `${rel.id}-attr-${attrIndex}`;
@@ -146,8 +156,8 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({ diagram, onUpdate }) => {
             id: attrId,
             type: 'attribute',
             position: {
-              x: rel.position.x + 150,
-              y: rel.position.y + attrIndex * 80,
+              x: rel.position.x + 130,
+              y: rel.position.y + attrIndex * 60,
             },
             data: {
               label: attr.name,
@@ -162,8 +172,8 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({ diagram, onUpdate }) => {
             type: 'custom',
             style: {
               stroke: '#7c3aed',
-              strokeWidth: 1,
-              strokeDasharray: '5,5',
+              strokeWidth: 1.5,
+              strokeDasharray: '4,4',
             },
           });
         });
@@ -172,7 +182,7 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({ diagram, onUpdate }) => {
 
     setNodes(newNodes);
     setEdges(newEdges);
-  }, [diagram]);
+  }, [diagram, setNodes, setEdges]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -183,7 +193,8 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({ diagram, onUpdate }) => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="w-full h-full"
+      transition={{ duration: 0.3 }}
+      className="w-full h-full overflow-hidden flex flex-1"
     >
       <ReactFlow
         nodes={nodes}
@@ -191,33 +202,40 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({ diagram, onUpdate }) => {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onNodeClick={(_, node) => onNodeSelect?.(node)}
+        onPaneClick={() => onNodeSelect?.(null)}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
-        className="bg-gray-50"
+        className="w-full h-full bg-[#fafafa]"
+        minZoom={0.1}
+        maxZoom={3}
       >
-        <Background gap={16} size={1} />
-        <Controls />
+        {showGrid && <Background gap={20} size={1.5} color="#e4e4e7" />}
+        <Controls showInteractive={false} />
         <MiniMap
           nodeColor={(node) => {
             switch (node.type) {
               case 'entity':
-                return '#3b82f6';
+                return '#2563eb';
               case 'attribute':
                 return '#10b981';
               case 'relationship':
-                return '#8b5cf6';
+                return '#7c3aed';
               default:
-                return '#gray';
+                return '#a1a1aa';
             }
           }}
+          maskColor="rgba(240, 242, 245, 0.7)"
+          className="bg-white border border-zinc-200"
         />
         <Panel position="top-right">
           <button
             onClick={applyAutoLayout}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            className="bg-zinc-900/90 hover:bg-zinc-900 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-1.5 backdrop-blur-md active:scale-95"
           >
-            Auto Layout
+            <span>✨</span>
+            <span>Auto Layout</span>
           </button>
         </Panel>
       </ReactFlow>

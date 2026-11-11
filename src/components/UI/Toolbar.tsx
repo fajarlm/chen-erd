@@ -20,7 +20,7 @@ interface ToolbarProps {
     onToggleGrid: () => void;
     onClearCanvas: () => void;
     onUndo?: () => void;
-    onRedo?: () => void;y
+    onRedo?: () => void;
     onAddEntity?: () => void;
     showGrid: boolean;
     zoom: number;

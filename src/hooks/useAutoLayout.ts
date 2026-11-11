@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useReactFlow } from 'reactflow';
-import dagre from 'dagre'; // You'll need to install this: npm install dagre @types/dagre
+import dagre from 'dagre';
 
 export const useAutoLayout = () => {
   const { getNodes, getEdges, setNodes, fitView } = useReactFlow();
@@ -9,37 +9,53 @@ export const useAutoLayout = () => {
     const nodes = getNodes();
     const edges = getEdges();
 
+    if (nodes.length === 0) return;
+
     const g = new dagre.graphlib.Graph();
     g.setDefaultEdgeLabel(() => ({}));
-    g.setGraph({ rankdir: 'TB', nodesep: 100, ranksep: 150 });
-
-    // Add nodes to dagre graph
-    nodes.forEach((node) => {
-      g.setNode(node.id, { width: 200, height: 100 });
+    g.setGraph({ 
+      rankdir: 'TB', 
+      nodesep: 90, 
+      ranksep: 130,
+      marginx: 50,
+      marginy: 50
     });
 
-    // Add edges to dagre graph
+    nodes.forEach((node) => {
+      let width = 160;
+      let height = 60;
+      if (node.type === 'attribute') {
+        width = 110;
+        height = 50;
+      } else if (node.type === 'relationship') {
+        width = 110;
+        height = 110;
+      }
+      g.setNode(node.id, { width, height });
+    });
+
     edges.forEach((edge) => {
       g.setEdge(edge.source, edge.target);
     });
 
-    // Calculate layout
     dagre.layout(g);
 
-    // Apply new positions
     const layoutedNodes = nodes.map((node) => {
-      const nodeWithPosition = g.node(node.id);
+      const pos = g.node(node.id);
+      const halfWidth = node.type === 'relationship' ? 55 : (node.type === 'attribute' ? 55 : 80);
+      const halfHeight = node.type === 'relationship' ? 55 : (node.type === 'attribute' ? 25 : 30);
+      
       return {
         ...node,
         position: {
-          x: nodeWithPosition.x - 100, // Center the node
-          y: nodeWithPosition.y - 50,
+          x: pos.x - halfWidth,
+          y: pos.y - halfHeight,
         },
       };
     });
 
     setNodes(layoutedNodes);
-    setTimeout(() => fitView({ duration: 500 }), 0);
+    setTimeout(() => fitView({ duration: 400, padding: 0.15 }), 50);
   }, [getNodes, getEdges, setNodes, fitView]);
 
   return { applyAutoLayout };

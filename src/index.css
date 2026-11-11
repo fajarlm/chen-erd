@@ -5,6 +5,8 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
+
+
 * {
   margin: 0;
   padding: 0;
@@ -26,7 +28,22 @@ body {
 }
 
 /* ── React Flow overrides ────────────────────────── */
-.react-flow__node { font-size: 12px; }
+.react-flow__viewport {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.react-flow__container {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  flex: 1 !important;
+}
+
+.react-flow__node { 
+  font-size: 12px; 
+}
+
 .react-flow__node-entity,
 .react-flow__node-attribute,
 .react-flow__node-relationship {

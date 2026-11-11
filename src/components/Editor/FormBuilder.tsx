@@ -19,12 +19,22 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ onSubmit }) => {
   const addTable = () => {
     if (!currentTable.trim()) return;
     
+    // Avoid duplicate table names
+    if (tables.some(t => t.name.toLowerCase() === currentTable.trim().toLowerCase())) {
+      alert('An entity with this name already exists.');
+      return;
+    }
+
     setTables([...tables, {
-      name: currentTable,
+      name: currentTable.trim(),
       columns: [],
       isJunctionTable: false,
     }]);
     setCurrentTable('');
+  };
+
+  const removeTable = (tableIndex: number) => {
+    setTables(tables.filter((_, idx) => idx !== tableIndex));
   };
 
   const addColumn = (tableName: string) => {
@@ -34,7 +44,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ onSubmit }) => {
       if (table.name === tableName) {
         return {
           ...table,
-          columns: [...table.columns, { ...currentColumn }],
+          columns: [...table.columns, { ...currentColumn, name: currentColumn.name.trim() }],
         };
       }
       return table;
@@ -49,6 +59,10 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ onSubmit }) => {
   };
 
   const generateERD = () => {
+    if (tables.length === 0) {
+      alert('Please add at least one entity before generating the diagram.');
+      return;
+    }
     onSubmit(tables);
   };
 
@@ -58,7 +72,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ onSubmit }) => {
       animate={{ y: 0, opacity: 1 }}
       className="space-y-6"
     >
-      <div className="border-b border-zinc-100 pb-3 ">
+      <div className="border-b border-zinc-100 pb-3">
         <h3 className="font-semibold text-zinc-800">Visual Builder</h3>
         <p className="text-xs text-zinc-500 mt-1">Create entities and attributes manually without writing SQL.</p>
       </div>
@@ -71,8 +85,9 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ onSubmit }) => {
             type="text"
             value={currentTable}
             onChange={(e) => setCurrentTable(e.target.value)}
-            className="flex-1 border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-zinc-800 focus:border-transparent transition-all"
-            placeholder="Entity name"
+            onKeyDown={(e) => { if (e.key === 'Enter') addTable(); }}
+            className="flex-1 border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-zinc-800 focus:border-transparent transition-all bg-white"
+            placeholder="Entity name (e.g. Users, Orders)"
           />
           <button
             onClick={addTable}
@@ -86,11 +101,23 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ onSubmit }) => {
       {/* Existing Tables */}
       <div className="space-y-4">
         {tables.map((table, tableIndex) => (
-          <div key={tableIndex} className="border border-zinc-200/80 rounded-xl p-4 bg-white shadow-sm">
-            <h4 className="font-semibold text-zinc-800 mb-3 flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-              {table.name}
-            </h4>
+          <div key={tableIndex} className="border border-zinc-200/80 rounded-xl p-4 bg-white shadow-xs">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-semibold text-zinc-800 flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
+                {table.name}
+              </h4>
+              <button
+                onClick={() => removeTable(tableIndex)}
+                className="text-zinc-400 hover:text-rose-500 p-1 rounded-md transition-colors"
+                title="Delete entity"
+                aria-label={`Delete entity ${table.name}`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
             
             {/* Columns */}
             {table.columns.length > 0 && (
@@ -116,8 +143,11 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ onSubmit }) => {
                         }));
                       }}
                       className="text-zinc-400 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label="Remove attribute"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
                     </button>
                   </div>
                 ))}
@@ -131,7 +161,8 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ onSubmit }) => {
                   type="text"
                   value={currentColumn.name}
                   onChange={(e) => setCurrentColumn({ ...currentColumn, name: e.target.value })}
-                  className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-zinc-800 focus:border-transparent transition-all"
+                  onKeyDown={(e) => { if (e.key === 'Enter') addColumn(table.name); }}
+                  className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-zinc-800 focus:border-transparent transition-all bg-white"
                   placeholder="Attribute name"
                 />
                 <select
@@ -197,7 +228,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ onSubmit }) => {
                 onClick={() => addColumn(table.name)}
                 className="w-full bg-zinc-100 text-zinc-700 font-medium py-2 rounded-lg text-sm hover:bg-zinc-200 transition-colors"
               >
-                Add Attribute
+                + Add Attribute
               </button>
             </div>
           </div>
@@ -209,7 +240,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ onSubmit }) => {
           onClick={generateERD}
           className="w-full bg-zinc-800 text-white py-3 rounded-xl font-medium hover:bg-zinc-900 active:scale-[0.98] transition-all shadow-md shadow-zinc-900/20 sticky bottom-4"
         >
-          Generate ERD
+          Generate Chen ERD ({tables.length} {tables.length === 1 ? 'Entity' : 'Entities'})
         </button>
       )}
     </motion.div>

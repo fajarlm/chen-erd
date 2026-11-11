@@ -28,15 +28,19 @@ export class ChenConverterService {
       isDerived: false
     }));
     
+    const colsPerRow = 3;
+    const colIndex = index % colsPerRow;
+    const rowIndex = Math.floor(index / colsPerRow);
+
     return {
       id: uuidv4(),
       name: table.name,
       attributes,
       position: {
-        x: 100 + (index % 3) * 350,
-        y: 100 + Math.floor(index / 3) * 300
+        x: 150 + colIndex * 480,
+        y: 120 + rowIndex * 420
       },
-      isWeakEntity: table.columns.every(col => !col.isPrimaryKey)
+      isWeakEntity: table.columns.length > 0 && table.columns.every(col => !col.isPrimaryKey)
     };
   }
   
@@ -45,7 +49,7 @@ export class ChenConverterService {
     entities: ChenEntity[],
     relationships: ChenRelationship[]
   ): void {
-    // Handle junction tables (many-to-many relationships)
+    // 1. Handle junction tables (many-to-many relationships)
     const junctionTables = tables.filter(t => t.isJunctionTable);
     
     junctionTables.forEach((junctionTable, index) => {
@@ -54,32 +58,36 @@ export class ChenConverterService {
         .map(col => col.references!.table);
       
       const relatedEntities = entities.filter(e => 
-        relatedEntityNames.includes(e.name)
+        relatedEntityNames.some(name => name.toLowerCase() === e.name.toLowerCase())
       );
       
       if (relatedEntities.length >= 2) {
         const relationshipName = this.generateRelationshipName(junctionTable.name);
         
         const cardinalities: { [entityId: string]: 'M' | 'N' } = {};
-        relatedEntities.forEach(entity => {
-          cardinalities[entity.id] = 'M';
+        relatedEntities.forEach((entity, idx) => {
+          cardinalities[entity.id] = idx === 0 ? 'M' : 'N';
         });
         
-        relationships.push({
+        // Position at average of connected entities
+        const avgX = relatedEntities.reduce((sum, e) => sum + e.position.x, 0) / relatedEntities.length;
+        const avgY = relatedEntities.reduce((sum, e) => sum + e.position.y, 0) / relatedEntities.length;
+
+        const junctionRel: ChenRelationship = {
           id: uuidv4(),
           name: relationshipName,
           entities: relatedEntities.map(e => e.id),
           cardinalities,
           position: {
-            x: 400 + index * 200,
-            y: 300 + index * 150
+            x: avgX,
+            y: avgY + (index % 2 === 0 ? 30 : -30)
           },
           isIdentifying: junctionTable.columns.some(col => 
             col.isPrimaryKey && col.isForeignKey
           )
-        });
-        
-        // Add junction table attributes to relationship
+        };
+
+        // Add junction table attributes to relationship if any extra columns exist
         const junctionAttributes = junctionTable.columns
           .filter(col => !col.isForeignKey)
           .map(col => ({
@@ -91,25 +99,29 @@ export class ChenConverterService {
           }));
         
         if (junctionAttributes.length > 0) {
-          const relationship = relationships[relationships.length - 1];
-          relationship.attributes = junctionAttributes;
+          junctionRel.attributes = junctionAttributes;
         }
+
+        relationships.push(junctionRel);
       }
     });
     
-    // Handle direct foreign key relationships (1:N or 1:1)
+    // 2. Handle direct foreign key relationships (1:N or 1:1)
+    let fkRelIndex = 0;
     tables.forEach(table => {
       if (table.isJunctionTable) return;
       
-      const entity = entities.find(e => e.name === table.name);
+      const entity = entities.find(e => e.name.toLowerCase() === table.name.toLowerCase());
       if (!entity) return;
       
       table.columns.forEach(col => {
         if (col.isForeignKey && col.references) {
-          const referencedEntity = entities.find(e => e.name === col.references!.table);
+          const referencedEntity = entities.find(
+            e => e.name.toLowerCase() === col.references!.table.toLowerCase()
+          );
           if (!referencedEntity) return;
           
-          // Check if relationship already exists
+          // Check if relationship already exists between these entities
           const exists = relationships.some(r => 
             r.entities.includes(entity.id) && 
             r.entities.includes(referencedEntity.id)
@@ -126,14 +138,22 @@ export class ChenConverterService {
             cardinalities[referencedEntity.id] = '1';
             cardinalities[entity.id] = 'N';
             
+            // Midpoint position between the two entities
+            const midX = (entity.position.x + referencedEntity.position.x) / 2;
+            const midY = (entity.position.y + referencedEntity.position.y) / 2;
+            
+            // Small offset for subsequent relationships to prevent exact stacking
+            const offset = (fkRelIndex % 3 - 1) * 40;
+            fkRelIndex++;
+
             relationships.push({
               id: uuidv4(),
               name: relationshipName,
-              entities: [entity.id, referencedEntity.id],
+              entities: [referencedEntity.id, entity.id],
               cardinalities,
               position: {
-                x: 250,
-                y: 250
+                x: midX + offset,
+                y: midY + offset
               }
             });
           }
@@ -143,7 +163,6 @@ export class ChenConverterService {
   }
   
   private generateRelationshipName(junctionTableName: string): string {
-    // Remove common junction table suffixes
     const cleanedName = junctionTableName
       .replace(/_/g, ' ')
       .replace(/junction$/i, '')
@@ -155,7 +174,7 @@ export class ChenConverterService {
   
   private generateForeignKeyRelationshipName(
     columnName: string,
-    childTable: string,
+    _childTable: string,
     parentTable: string
   ): string {
     const commonPatterns: { [key: string]: string } = {
@@ -168,14 +187,16 @@ export class ChenConverterService {
       'updated_by': 'Updates',
       'owner_id': 'Owns',
       'manager_id': 'Manages',
-      'department_id': 'Belongs To'
+      'department_id': 'Belongs To',
+      'customer_id': 'Places',
+      'order_id': 'Belongs To',
+      'product_id': 'Includes'
     };
     
     if (commonPatterns[columnName.toLowerCase()]) {
       return commonPatterns[columnName.toLowerCase()];
     }
     
-    // Generate generic name
     const action = this.determineAction(columnName);
     return `${action} ${parentTable}`;
   }
@@ -194,6 +215,6 @@ export class ChenConverterService {
       return 'Manages';
     }
     
-    return 'Relates To';
+    return 'Has';
   }
 }

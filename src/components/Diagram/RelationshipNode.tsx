@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
 
 interface RelationshipNodeProps {
@@ -16,32 +16,32 @@ interface RelationshipNodeProps {
 
 const RelationshipNode = memo(({ data }: RelationshipNodeProps) => {
   return (
-    <div className="relative">
-      <Handle type="source" position={Position.Top} id="top" />
-      <Handle type="source" position={Position.Bottom} id="bottom" />
-      <Handle type="source" position={Position.Left} id="left" />
-      <Handle type="source" position={Position.Right} id="right" />
-      
+    <div className="relative select-none flex items-center justify-center p-2">
+      <Handle type="target" position={Position.Top} id="top-target" className="opacity-0 w-2 h-2" />
+      <Handle type="source" position={Position.Top} id="top-source" className="opacity-0 w-2 h-2" />
+      <Handle type="target" position={Position.Bottom} id="bottom-target" className="opacity-0 w-2 h-2" />
+      <Handle type="source" position={Position.Bottom} id="bottom-source" className="opacity-0 w-2 h-2" />
+      <Handle type="target" position={Position.Left} id="left-target" className="opacity-0 w-2 h-2" />
+      <Handle type="source" position={Position.Left} id="left-source" className="opacity-0 w-2 h-2" />
+      <Handle type="target" position={Position.Right} id="right-target" className="opacity-0 w-2 h-2" />
+      <Handle type="source" position={Position.Right} id="right-source" className="opacity-0 w-2 h-2" />
+
+      {/* Diamond Shape */}
       <div
         className={`
-          w-28 h-28 flex items-center justify-center
-          rotate-45 border-2 bg-white
-          ${data.isIdentifying ? 'border-red-500 bg-red-50' : 'border-purple-600'}
+          w-24 h-24 flex items-center justify-center
+          rotate-45 bg-white shadow-md transition-shadow hover:shadow-lg
+          ${data.isIdentifying 
+            ? 'border-4 border-double border-purple-600 bg-purple-50/20' 
+            : 'border-2 border-purple-600'}
         `}
       >
-        <div className="-rotate-45 text-center">
-          <div className="font-semibold text-sm text-purple-900">
+        <div className="-rotate-45 text-center px-1 flex flex-col items-center justify-center">
+          <span className="font-semibold text-xs text-purple-950 leading-tight line-clamp-2 max-w-[65px] break-words">
             {data.label}
-          </div>
-          
-          {data.attributes && data.attributes.length > 0 && (
-            <div className="mt-2 border-t border-purple-200 pt-1">
-              {data.attributes.map((attr, index) => (
-                <div key={index} className="text-xs text-gray-600">
-                  {attr.name}
-                </div>
-              ))}
-            </div>
+          </span>
+          {data.isIdentifying && (
+            <span className="text-[9px] text-purple-600 font-medium mt-0.5">ID</span>
           )}
         </div>
       </div>
