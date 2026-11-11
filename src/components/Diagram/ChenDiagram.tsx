@@ -24,6 +24,7 @@ import RelationshipNode from './RelationshipNode';
 import CustomEdge from './CustomEdge';
 import type { ChenDiagram as ChenDiagramType } from '../../types';
 import { useAutoLayout } from '../../hooks/useAutoLayout';
+import { useAppTheme } from '../../context/ThemeContext';
 
 const nodeTypes: NodeTypes = {
   entity: EntityNode,
@@ -53,6 +54,8 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const { applyAutoLayout } = useAutoLayout();
   const { fitView } = useReactFlow();
+  const { theme } = useAppTheme();
+  const isNeo = theme === 'neobrutalism';
 
   // Convert Chen diagram to React Flow nodes and edges
   useEffect(() => {
@@ -86,8 +89,8 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({
       entity.attributes.forEach((attr, index) => {
         const attrId = `${entity.id}-attr-${index}`;
         const angle = (2 * Math.PI * index) / totalAttrs - Math.PI / 2;
-        const attrX = Math.round(entity.position.x + 85 + rx * Math.cos(angle) - 50);
-        const attrY = Math.round(entity.position.y + 35 + ry * Math.sin(angle) - 20);
+        const attrX = Math.round(entity.position.x + 75 + rx * Math.cos(angle) - 52);
+        const attrY = Math.round(entity.position.y + 25 + ry * Math.sin(angle) - 23);
 
         newNodes.push({
           id: attrId,
@@ -101,7 +104,7 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({
           },
         });
 
-        // Line from entity to attribute
+        // Straight line from entity to attribute (undirected, pure Chen ERD)
         newEdges.push({
           id: `edge-${entity.id}-${attrId}`,
           source: entity.id,
@@ -111,8 +114,8 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({
             isPrimaryKey: attr.isPrimaryKey,
           },
           style: {
-            stroke: attr.isPrimaryKey ? '#10b981' : '#94a3b8',
-            strokeWidth: attr.isPrimaryKey ? 1.8 : 1.2,
+            stroke: isNeo ? '#000000' : '#64748b',
+            strokeWidth: isNeo ? 2.5 : 1.5,
           },
         });
       });
@@ -132,7 +135,7 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({
         },
       });
 
-      // Create edges between relationship and entities
+      // Create straight edges between relationship and entities (Chen notation)
       rel.entities.forEach((entityId) => {
         const cardinality = rel.cardinalities[entityId] || '1';
         const edgeId = `edge-${rel.id}-${entityId}`;
@@ -146,8 +149,8 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({
             cardinality: cardinality,
           },
           style: {
-            stroke: '#8b5cf6',
-            strokeWidth: 2,
+            stroke: isNeo ? '#000000' : '#7c3aed',
+            strokeWidth: isNeo ? 2.5 : 2,
           },
         });
       });
@@ -175,8 +178,8 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({
             target: attrId,
             type: 'custom',
             style: {
-              stroke: '#a855f7',
-              strokeWidth: 1.5,
+              stroke: isNeo ? '#000000' : '#7c3aed',
+              strokeWidth: isNeo ? 2.5 : 1.5,
               strokeDasharray: '4,4',
             },
           });
@@ -187,12 +190,12 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({
     setNodes(newNodes);
     setEdges(newEdges);
 
-    // Initial tidy layout & fit view
+    // Initial layout & fit view
     setTimeout(() => {
       applyAutoLayout();
       fitView({ duration: 500, padding: 0.2 });
     }, 50);
-  }, [diagram, setNodes, setEdges]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [diagram, setNodes, setEdges, isNeo]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -217,27 +220,43 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
-        className="w-full h-full bg-[#f8fafc]"
+        className={`w-full h-full ${isNeo ? 'bg-[#FFFDF5]' : 'bg-[#f8fafc]'}`}
         minZoom={0.1}
         maxZoom={3}
       >
         {showGrid && (
           <Background
             gap={24}
-            size={1.2}
-            color="#cbd5e1"
+            size={isNeo ? 1.5 : 1.2}
+            color={isNeo ? '#000000' : '#cbd5e1'}
             variant={BackgroundVariant.Dots}
           />
         )}
         <Controls 
           showInteractive={false} 
           position="bottom-left"
-          className="!mb-6 !ml-6 !border !border-zinc-200/80 !rounded-xl !overflow-hidden !shadow-md"
+          className={`!mb-6 !ml-6 ${
+            isNeo
+              ? '!border-2 !border-black !rounded-none !shadow-[3px_3px_0px_#000] !bg-white'
+              : '!border !border-zinc-200/80 !rounded-xl !overflow-hidden !shadow-md'
+          }`}
         />
         {showMinimap && (
           <MiniMap
             position="bottom-right"
             nodeColor={(node) => {
+              if (isNeo) {
+                switch (node.type) {
+                  case 'entity':
+                    return '#FFE600';
+                  case 'relationship':
+                    return '#A6FAFF';
+                  case 'attribute':
+                    return '#FFFFFF';
+                  default:
+                    return '#000000';
+                }
+              }
               switch (node.type) {
                 case 'entity':
                   return '#2563eb';
@@ -249,8 +268,12 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({
                   return '#94a3b8';
               }
             }}
-            maskColor="rgba(241, 245, 249, 0.75)"
-            className="!mb-6 !mr-6 !rounded-2xl !overflow-hidden !border !border-zinc-200/80 !shadow-lg bg-white"
+            maskColor={isNeo ? 'rgba(0, 0, 0, 0.1)' : 'rgba(241, 245, 249, 0.75)'}
+            className={`!mb-6 !mr-6 ${
+              isNeo
+                ? '!border-2 !border-black !rounded-none !shadow-[4px_4px_0px_#000] !bg-[#FFFDF5]'
+                : '!rounded-2xl !overflow-hidden !border !border-zinc-200/80 !shadow-lg bg-white'
+            }`}
           />
         )}
       </ReactFlow>

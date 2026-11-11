@@ -1,10 +1,12 @@
-import { BaseEdge, EdgeLabelRenderer, getBezierPath } from 'reactflow';
+import { BaseEdge, EdgeLabelRenderer, getStraightPath } from 'reactflow';
 import type { EdgeProps } from 'reactflow';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface CustomEdgeProps extends EdgeProps {
   data?: {
     cardinality?: string;
     isPrimaryKey?: boolean;
+    isTotalParticipation?: boolean;
   };
 }
 
@@ -13,24 +15,31 @@ const CustomEdge = ({
   sourceY,
   targetX,
   targetY,
-  sourcePosition,
-  targetPosition,
   style = {},
-  markerEnd,
   data,
 }: CustomEdgeProps) => {
-  const [edgePath, labelX, labelY] = getBezierPath({
+  const { theme } = useAppTheme();
+  const isNeo = theme === 'neobrutalism';
+
+  // Authentic Chen ERD uses pure straight lines, NOT curvy bezier wires!
+  const [edgePath, labelX, labelY] = getStraightPath({
     sourceX,
     sourceY,
-    sourcePosition,
     targetX,
     targetY,
-    targetPosition,
   });
+
+  const edgeStyle = {
+    ...style,
+    stroke: isNeo ? '#000000' : (style.stroke || '#475569'),
+    strokeWidth: isNeo ? 2.5 : (style.strokeWidth || 1.8),
+  };
 
   return (
     <>
-      <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
+      <BaseEdge path={edgePath} style={edgeStyle} />
+
+      {/* Cardinality Badge (Chen notation: 1, N, M) */}
       {data?.cardinality && (
         <EdgeLabelRenderer>
           <div
@@ -41,7 +50,16 @@ const CustomEdge = ({
             }}
             className="nodrag nopan flex items-center justify-center z-10"
           >
-            <div className="bg-white/95 border border-purple-300 text-purple-800 font-bold text-[11px] px-2 py-0.5 rounded-full shadow-xs min-w-[22px] text-center tracking-tight">
+            <div
+              className={`
+                min-w-[22px] px-2 py-0.5 text-center text-xs select-none
+                ${
+                  isNeo
+                    ? 'bg-white border-2 border-black text-black font-black shadow-[2px_2px_0px_0px_#000]'
+                    : 'bg-white/95 border border-zinc-300 text-zinc-800 font-bold rounded-md shadow-xs'
+                }
+              `}
+            >
               {data.cardinality}
             </div>
           </div>

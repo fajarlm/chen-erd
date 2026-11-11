@@ -3,6 +3,7 @@ import Editor from '@monaco-editor/react';
 import { motion } from 'framer-motion';
 import { FiCode } from 'react-icons/fi';
 import { HiSparkles } from 'react-icons/hi';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface SQLEditorProps {
   onExecute: (sql: string) => void;
@@ -108,6 +109,8 @@ CREATE TABLE enrollments (
 
 const SQLEditor: React.FC<SQLEditorProps> = ({ onExecute, isLoading }) => {
   const [code, setCode] = useState<string>(TEMPLATES[0].sql);
+  const { theme } = useAppTheme();
+  const isNeo = theme === 'neobrutalism';
 
   const handleExecute = () => {
     onExecute(code);
@@ -119,41 +122,66 @@ const SQLEditor: React.FC<SQLEditorProps> = ({ onExecute, isLoading }) => {
 
   return (
     <motion.div
-      initial={{ x: -20, opacity: 0 }}
+      initial={{ x: -15, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      className="flex flex-col h-full bg-white rounded-2xl border border-zinc-200/80 shadow-xs overflow-hidden"
+      className={`
+        flex flex-col h-full overflow-hidden transition-all
+        ${
+          isNeo
+            ? 'border-2 border-black bg-white shadow-[3px_3px_0px_#000]'
+            : 'rounded-2xl border border-zinc-200/80 bg-white shadow-2xs'
+        }
+      `}
     >
       {/* Top Header */}
-      <div className="flex flex-col gap-2 p-3.5 border-b border-zinc-100 bg-zinc-50/60">
+      <div className={`p-3 border-b ${isNeo ? 'border-black bg-[#FFE600]' : 'border-zinc-100 bg-zinc-50/70'}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600">
-              <FiCode className="w-4 h-4" />
+            <div className={`p-1.5 ${isNeo ? 'border border-black bg-white shadow-[1px_1px_0px_#000]' : 'rounded-lg bg-indigo-50 text-indigo-600'}`}>
+              <FiCode className="w-3.5 h-3.5" />
             </div>
             <div>
-              <h3 className="font-bold text-xs text-zinc-900 tracking-tight">SQL Schema Editor</h3>
-              <p className="text-[10px] text-zinc-500">Paste or write DDL statements</p>
+              <h3 className={`text-xs ${isNeo ? 'font-black text-black' : 'font-bold text-zinc-900'}`}>
+                SQL Schema
+              </h3>
             </div>
           </div>
 
           <button
             onClick={handleExecute}
             disabled={isLoading}
-            className="flex items-center gap-1.5 bg-zinc-900 hover:bg-black text-white px-3.5 py-1.5 rounded-xl transition-all active:scale-95 disabled:opacity-50 text-xs font-semibold shadow-xs"
+            className={`
+              flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold transition-all
+              ${
+                isNeo
+                  ? 'border-2 border-black bg-[#A6FAFF] text-black font-black shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none'
+                  : 'bg-zinc-900 hover:bg-black text-white rounded-xl shadow-2xs active:scale-95'
+              }
+              ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
+            `}
           >
-            <HiSparkles className="w-3.5 h-3.5 text-indigo-400" />
+            <HiSparkles className={`w-3.5 h-3.5 ${isNeo ? 'text-black' : 'text-indigo-400'}`} />
             <span>{isLoading ? 'Generating...' : 'Generate ERD'}</span>
           </button>
         </div>
 
         {/* Template pills */}
-        <div className="flex items-center gap-1.5 pt-1">
-          <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Samples:</span>
+        <div className="flex items-center gap-1.5 pt-2">
+          <span className={`text-[10px] uppercase font-bold tracking-wider ${isNeo ? 'text-black' : 'text-zinc-400'}`}>
+            Samples:
+          </span>
           {TEMPLATES.map((tmpl) => (
             <button
               key={tmpl.name}
               onClick={() => loadTemplate(tmpl.sql)}
-              className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-white border border-zinc-200/70 text-zinc-600 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-2xs"
+              className={`
+                text-[10px] font-bold px-2 py-0.5 transition-all
+                ${
+                  isNeo
+                    ? 'border border-black bg-white hover:bg-[#A6FAFF] text-black shadow-[1px_1px_0px_#000] active:translate-x-[1px]'
+                    : 'rounded-lg bg-white border border-zinc-200 text-zinc-600 hover:text-indigo-600 hover:border-indigo-200'
+                }
+              `}
             >
               {tmpl.name}
             </button>

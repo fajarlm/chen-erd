@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import type { ParsedTable, TableColumn } from '../../types';
+import { useAppTheme } from '../../context/ThemeContext';
+import { FiTrash2, FiPlus } from 'react-icons/fi';
 
 interface FormBuilderProps {
   onSubmit: (tables: ParsedTable[]) => void;
 }
 
 const FormBuilder: React.FC<FormBuilderProps> = ({ onSubmit }) => {
+  const { theme } = useAppTheme();
+  const isNeo = theme === 'neobrutalism';
+
   const [tables, setTables] = useState<ParsedTable[]>([]);
   const [currentTable, setCurrentTable] = useState<string>('');
   const [currentColumn, setCurrentColumn] = useState<TableColumn>({
@@ -19,7 +24,6 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ onSubmit }) => {
   const addTable = () => {
     if (!currentTable.trim()) return;
     
-    // Avoid duplicate table names
     if (tables.some(t => t.name.toLowerCase() === currentTable.trim().toLowerCase())) {
       alert('An entity with this name already exists.');
       return;
@@ -68,67 +72,113 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ onSubmit }) => {
 
   return (
     <motion.div
-      initial={{ y: 20, opacity: 0 }}
+      initial={{ y: 15, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="space-y-6"
+      className="space-y-5"
     >
-      <div className="border-b border-zinc-100 pb-3">
-        <h3 className="font-semibold text-zinc-800">Visual Builder</h3>
-        <p className="text-xs text-zinc-500 mt-1">Create entities and attributes manually without writing SQL.</p>
+      <div className={`pb-3 border-b ${isNeo ? 'border-black' : 'border-zinc-100'}`}>
+        <h3 className={`text-xs uppercase tracking-wider ${isNeo ? 'font-black text-black' : 'font-bold text-zinc-900'}`}>
+          Visual ERD Builder
+        </h3>
+        <p className="text-[11px] text-zinc-500 mt-0.5">Define entities, attributes, and keys manually</p>
       </div>
 
-      {/* Add Table */}
-      <div className="space-y-2 bg-zinc-50/50 p-4 rounded-xl border border-zinc-100">
-        <label className="text-xs font-semibold uppercase tracking-wider text-zinc-500">New Entity</label>
+      {/* Add Entity Box */}
+      <div className={`p-3.5 transition-all ${isNeo ? 'border-2 border-black bg-white shadow-[2px_2px_0px_#000]' : 'border border-zinc-200/80 rounded-2xl bg-zinc-50/50 shadow-2xs'}`}>
+        <label className={`text-[10px] uppercase font-bold tracking-wider block mb-1.5 ${isNeo ? 'text-black' : 'text-zinc-500'}`}>
+          New Entity
+        </label>
         <div className="flex gap-2">
           <input
             type="text"
             value={currentTable}
             onChange={(e) => setCurrentTable(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') addTable(); }}
-            className="flex-1 border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-zinc-800 focus:border-transparent transition-all bg-white"
-            placeholder="Entity name (e.g. Users, Orders)"
+            className={`
+              flex-1 px-3 py-1.5 text-xs bg-white transition-all outline-none
+              ${
+                isNeo
+                  ? 'border-2 border-black font-bold text-black focus:bg-[#FFE600]/20'
+                  : 'border border-zinc-200 rounded-xl focus:border-zinc-800 text-zinc-800'
+              }
+            `}
+            placeholder="Entity name (e.g. Employee)"
           />
           <button
             onClick={addTable}
-            className="bg-zinc-800 text-white w-20 px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-900 transition-colors shadow-sm"
+            className={`
+              px-3.5 py-1.5 text-xs flex items-center gap-1 transition-all
+              ${
+                isNeo
+                  ? 'border-2 border-black bg-[#FFE600] text-black font-black shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none'
+                  : 'bg-zinc-900 hover:bg-black text-white font-semibold rounded-xl shadow-2xs active:scale-95'
+              }
+            `}
           >
-            Add
+            <FiPlus className="w-3.5 h-3.5" />
+            <span>Add</span>
           </button>
         </div>
       </div>
 
-      {/* Existing Tables */}
-      <div className="space-y-4">
+      {/* Existing Entities */}
+      <div className="space-y-3.5">
         {tables.map((table, tableIndex) => (
-          <div key={tableIndex} className="border border-zinc-200/80 rounded-xl p-4 bg-white shadow-xs">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-semibold text-zinc-800 flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
-                {table.name}
+          <div
+            key={tableIndex}
+            className={`
+              p-3.5 transition-all
+              ${
+                isNeo
+                  ? 'border-2 border-black bg-white shadow-[3px_3px_0px_#000]'
+                  : 'border border-zinc-200/80 rounded-2xl bg-white shadow-2xs'
+              }
+            `}
+          >
+            <div className="flex items-center justify-between mb-2.5">
+              <h4 className={`text-xs uppercase flex items-center gap-2 ${isNeo ? 'font-black text-black' : 'font-bold text-zinc-900'}`}>
+                <div className={`w-2 h-2 ${isNeo ? 'bg-black' : 'bg-blue-600 rounded-full'}`} />
+                <span>{table.name}</span>
               </h4>
               <button
                 onClick={() => removeTable(tableIndex)}
-                className="text-zinc-400 hover:text-rose-500 p-1 rounded-md transition-colors"
+                className={`p-1 transition-colors ${isNeo ? 'text-black hover:text-rose-600' : 'text-zinc-400 hover:text-rose-600'}`}
                 title="Delete entity"
                 aria-label={`Delete entity ${table.name}`}
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
+                <FiTrash2 className="w-3.5 h-3.5" />
               </button>
             </div>
             
-            {/* Columns */}
+            {/* Columns List */}
             {table.columns.length > 0 && (
-              <div className="space-y-2 mb-4">
+              <div className="space-y-1.5 mb-3">
                 {table.columns.map((col, colIndex) => (
-                  <div key={colIndex} className="flex items-center justify-between text-sm bg-zinc-50 p-2.5 rounded-lg border border-zinc-100 group">
+                  <div
+                    key={colIndex}
+                    className={`
+                      flex items-center justify-between text-xs p-2 transition-all group
+                      ${
+                        isNeo
+                          ? 'border border-black bg-[#fafafa]'
+                          : 'rounded-xl bg-zinc-50 border border-zinc-100'
+                      }
+                    `}
+                  >
                     <span className="flex items-center gap-2">
-                      <span className="font-medium text-zinc-700">{col.name}</span>
-                      <span className="text-[10px] text-zinc-400 bg-zinc-200/50 px-1.5 py-0.5 rounded uppercase">{col.type.split('(')[0]}</span>
-                      {col.isPrimaryKey && <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded">PK</span>}
-                      {col.isForeignKey && <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded">FK</span>}
+                      <span className={`${col.isPrimaryKey ? 'underline underline-offset-2 font-bold' : 'font-medium'} ${isNeo ? 'text-black' : 'text-zinc-800'}`}>
+                        {col.name}
+                      </span>
+                      {col.isPrimaryKey && (
+                        <span className={`text-[9px] uppercase font-bold px-1.5 py-0.2 ${isNeo ? 'border border-black bg-[#FFE600] text-black' : 'bg-emerald-50 text-emerald-700 rounded'}`}>
+                          PK
+                        </span>
+                      )}
+                      {col.isForeignKey && (
+                        <span className={`text-[9px] uppercase font-bold px-1.5 py-0.2 ${isNeo ? 'border border-black bg-[#A6FAFF] text-black' : 'bg-indigo-50 text-indigo-700 rounded'}`}>
+                          FK
+                        </span>
+                      )}
                     </span>
                     <button
                       onClick={() => {
@@ -142,69 +192,80 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ onSubmit }) => {
                           return t;
                         }));
                       }}
-                      className="text-zinc-400 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="text-zinc-400 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity p-0.5"
                       aria-label="Remove attribute"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
+                      ×
                     </button>
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Add Column Form */}
-            <div className="space-y-3 pt-3 border-t border-zinc-100">
+            {/* Add Attribute Inputs */}
+            <div className={`pt-2.5 space-y-2 border-t ${isNeo ? 'border-black' : 'border-zinc-100'}`}>
               <div className="grid grid-cols-2 gap-2">
                 <input
                   type="text"
                   value={currentColumn.name}
                   onChange={(e) => setCurrentColumn({ ...currentColumn, name: e.target.value })}
                   onKeyDown={(e) => { if (e.key === 'Enter') addColumn(table.name); }}
-                  className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-zinc-800 focus:border-transparent transition-all bg-white"
+                  className={`
+                    w-full px-2.5 py-1.5 text-xs bg-white outline-none
+                    ${
+                      isNeo
+                        ? 'border border-black font-medium text-black focus:bg-[#FFE600]/20'
+                        : 'border border-zinc-200 rounded-xl text-zinc-800 focus:border-zinc-800'
+                    }
+                  `}
                   placeholder="Attribute name"
                 />
                 <select
                   value={currentColumn.type}
                   onChange={(e) => setCurrentColumn({ ...currentColumn, type: e.target.value })}
-                  className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-zinc-800 focus:border-transparent transition-all"
+                  className={`
+                    w-full px-2 py-1.5 text-xs bg-white outline-none
+                    ${
+                      isNeo
+                        ? 'border border-black font-medium text-black'
+                        : 'border border-zinc-200 rounded-xl text-zinc-800'
+                    }
+                  `}
                 >
                   <option>VARCHAR(255)</option>
                   <option>INT</option>
                   <option>TEXT</option>
                   <option>BOOLEAN</option>
                   <option>DATE</option>
-                  <option>TIMESTAMP</option>
-                  <option>FLOAT</option>
                   <option>DECIMAL</option>
                 </select>
               </div>
-              <div className="flex gap-4 px-1">
-                <label className="flex items-center gap-2 text-xs font-medium text-zinc-600 cursor-pointer">
+
+              <div className="flex gap-4 px-0.5 text-xs">
+                <label className="flex items-center gap-1.5 font-medium cursor-pointer">
                   <input
                     type="checkbox"
                     checked={currentColumn.isPrimaryKey}
                     onChange={(e) => setCurrentColumn({ ...currentColumn, isPrimaryKey: e.target.checked })}
-                    className="rounded border-zinc-300 text-zinc-800 focus:ring-zinc-800"
+                    className="accent-black cursor-pointer"
                   />
-                  Primary Key
+                  <span>Primary Key</span>
                 </label>
-                <label className="flex items-center gap-2 text-xs font-medium text-zinc-600 cursor-pointer">
+                <label className="flex items-center gap-1.5 font-medium cursor-pointer">
                   <input
                     type="checkbox"
                     checked={currentColumn.isForeignKey}
                     onChange={(e) => setCurrentColumn({ ...currentColumn, isForeignKey: e.target.checked })}
-                    className="rounded border-zinc-300 text-zinc-800 focus:ring-zinc-800"
+                    className="accent-black cursor-pointer"
                   />
-                  Foreign Key
+                  <span>Foreign Key</span>
                 </label>
               </div>
+
               {currentColumn.isForeignKey && (
                 <div>
-                  <label className="text-[10px] uppercase font-bold text-zinc-400 mb-1 block">References</label>
                   <select
-                    className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-zinc-800 focus:border-transparent transition-all"
+                    className={`w-full px-2 py-1.5 text-xs bg-white ${isNeo ? 'border border-black font-medium text-black' : 'border border-zinc-200 rounded-xl'}`}
                     onChange={(e) => {
                       const [refTable, refColumn] = e.target.value.split('.');
                       setCurrentColumn({
@@ -213,7 +274,7 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ onSubmit }) => {
                       });
                     }}
                   >
-                    <option value="">Select reference</option>
+                    <option value="">Select referenced entity.attribute</option>
                     {tables.map(t => 
                       t.columns.map(c => 
                         <option key={`${t.name}.${c.name}`} value={`${t.name}.${c.name}`}>
@@ -224,9 +285,17 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ onSubmit }) => {
                   </select>
                 </div>
               )}
+
               <button
                 onClick={() => addColumn(table.name)}
-                className="w-full bg-zinc-100 text-zinc-700 font-medium py-2 rounded-lg text-sm hover:bg-zinc-200 transition-colors"
+                className={`
+                  w-full py-1.5 text-xs font-bold transition-all
+                  ${
+                    isNeo
+                      ? 'border border-black bg-[#A6FAFF] text-black shadow-[1.5px_1.5px_0px_#000] active:translate-x-[1px]'
+                      : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-xl'
+                  }
+                `}
               >
                 + Add Attribute
               </button>
@@ -238,7 +307,14 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ onSubmit }) => {
       {tables.length > 0 && (
         <button
           onClick={generateERD}
-          className="w-full bg-zinc-800 text-white py-3 rounded-xl font-medium hover:bg-zinc-900 active:scale-[0.98] transition-all shadow-md shadow-zinc-900/20 sticky bottom-4"
+          className={`
+            w-full py-2.5 text-xs transition-all sticky bottom-4
+            ${
+              isNeo
+                ? 'border-2 border-black bg-[#FFE600] text-black font-black shadow-[3px_3px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none'
+                : 'bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-xs active:scale-[0.98]'
+            }
+          `}
         >
           Generate Chen ERD ({tables.length} {tables.length === 1 ? 'Entity' : 'Entities'})
         </button>

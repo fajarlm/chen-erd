@@ -6,8 +6,10 @@ import MainContent from './components/Layout/MainContent';
 import PropertiesPanel from './components/Layout/PropertiesPanel';
 import Toolbar from './components/UI/Toolbar';
 import ExportMenu from './components/UI/ExportMenu';
+import ThemeSelector from './components/UI/ThemeSelector';
 import { useDiagramState } from './hooks/useDiagramState';
 import { useAutoLayout } from './hooks/useAutoLayout';
+import { ThemeProvider, useAppTheme } from './context/ThemeContext';
 import { FiLayers, FiMenu, FiX } from 'react-icons/fi';
 
 const SAMPLE_SQL = `-- E-Commerce Sample Schema
@@ -63,6 +65,9 @@ function ChenERDAppInner() {
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [dismissedError, setDismissedError] = useState(false);
+
+  const { theme } = useAppTheme();
+  const isNeo = theme === 'neobrutalism';
 
   const diagramRef = useRef<HTMLDivElement>(null);
   const { zoomIn, zoomOut, fitView, getZoom } = useReactFlow();
@@ -151,43 +156,61 @@ function ChenERDAppInner() {
   const hasDiagram = diagram && (diagram.entities.length > 0 || diagram.relationships.length > 0);
 
   return (
-    <div className="h-screen flex flex-col bg-zinc-50 font-sans selection:bg-indigo-100 selection:text-indigo-900 relative overflow-hidden">
-      {/* Top Navigation Bar */}
-      <header className="h-13 bg-white/80 backdrop-blur-md border-b border-zinc-200/70 px-4 md:px-5 flex items-center justify-between shrink-0 z-20">
+    <div className={`h-screen flex flex-col font-sans selection:bg-indigo-100 selection:text-indigo-900 relative overflow-hidden ${isNeo ? 'bg-[#FFFDF5]' : 'bg-zinc-50'}`}>
+      {/* Top Header */}
+      <header className={`h-13 px-4 md:px-5 flex items-center justify-between shrink-0 z-20 transition-all ${
+        isNeo
+          ? 'bg-white border-b-2 border-black'
+          : 'bg-white/80 backdrop-blur-md border-b border-zinc-200/70'
+      }`}>
         <div className="flex items-center gap-3">
           <button 
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden p-1.5 -ml-1 text-zinc-600 hover:bg-zinc-100 rounded-xl transition-colors"
+            className={`lg:hidden p-1.5 -ml-1 transition-all ${isNeo ? 'border-2 border-black bg-[#FFE600] shadow-[2px_2px_0px_#000]' : 'text-zinc-600 hover:bg-zinc-100 rounded-xl'}`}
             aria-label="Toggle navigation menu"
           >
             {isMobileMenuOpen ? <FiX className="w-5 h-5" /> : <FiMenu className="w-5 h-5" />}
           </button>
 
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-500 text-white flex items-center justify-center shadow-xs">
+            <div className={`w-8 h-8 flex items-center justify-center transition-all ${
+              isNeo
+                ? 'border-2 border-black bg-[#FFE600] text-black shadow-[2px_2px_0px_#000]'
+                : 'rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-500 text-white shadow-xs'
+            }`}>
               <FiLayers className="w-4 h-4" />
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-bold text-sm text-zinc-900 tracking-tight">Chen ERD</span>
-              <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-600 border border-indigo-100">
-                Studio
+              <span className={`text-sm tracking-tight ${isNeo ? 'font-black text-black' : 'font-bold text-zinc-900'}`}>
+                Chen ERD
+              </span>
+              <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 ${
+                isNeo
+                  ? 'border border-black bg-[#A6FAFF] text-black'
+                  : 'rounded-md bg-indigo-50 text-indigo-600 border border-indigo-100'
+              }`}>
+                {isNeo ? 'NEO' : 'Studio'}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2 sm:gap-2.5">
           {activeError && (
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-rose-50 text-rose-700 px-3 py-1 rounded-xl text-xs flex items-center gap-2 border border-rose-200/60 shadow-2xs"
+              className={`px-3 py-1 text-xs flex items-center gap-2 ${
+                isNeo
+                  ? 'border-2 border-black bg-[#FF90E8] text-black font-bold shadow-[2px_2px_0px_#000]'
+                  : 'bg-rose-50 text-rose-700 rounded-xl border border-rose-200/60 shadow-2xs'
+              }`}
             >
-              <span className="font-bold text-rose-500">✕</span>
-              <span className="font-medium truncate max-w-[180px] md:max-w-[320px]">{activeError}</span>
+              <span className="font-bold">✕</span>
+              <span className="font-medium truncate max-w-[140px] md:max-w-[280px]">{activeError}</span>
               <button
                 onClick={() => setDismissedError(true)}
-                className="ml-1 text-rose-400 hover:text-rose-700 font-bold"
+                className="ml-1 font-bold opacity-70 hover:opacity-100"
                 aria-label="Dismiss error"
               >
                 ×
@@ -198,12 +221,20 @@ function ChenERDAppInner() {
           {!hasDiagram && (
             <button
               onClick={handleLoadSample}
-              className="hidden sm:inline-flex items-center text-xs font-semibold px-3 py-1.5 rounded-xl border border-zinc-200 text-zinc-700 hover:bg-zinc-100 transition-all active:scale-95"
+              className={`hidden sm:inline-flex items-center text-xs transition-all ${
+                isNeo
+                  ? 'px-3 py-1.5 border-2 border-black bg-[#A6FAFF] text-black font-black shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none'
+                  : 'px-3 py-1.5 rounded-xl border border-zinc-200 text-zinc-700 hover:bg-zinc-100 font-semibold shadow-2xs active:scale-95'
+              }`}
             >
               Sample Data
             </button>
           )}
 
+          {/* Theme Switcher Dropdown */}
+          <ThemeSelector />
+
+          {/* Export Menu */}
           <ExportMenu
             diagramRef={diagramRef}
             diagramData={diagram}
@@ -226,9 +257,11 @@ function ChenERDAppInner() {
           initial={{ x: -320, opacity: 0 }}
           animate={{ x: isMobileMenuOpen ? 0 : (window.innerWidth < 1024 ? -420 : 0), opacity: 1 }}
           transition={{ duration: 0.25, ease: 'easeOut' }}
-          className={`fixed lg:relative w-[85vw] max-w-[390px] lg:w-[390px] border-r border-zinc-200/70 bg-white/95 lg:bg-white/80 backdrop-blur-xl flex flex-col shadow-2xl lg:shadow-none z-40 h-[calc(100vh-52px)] ${
-            isMobileMenuOpen ? 'left-0' : '-left-full lg:left-0'
-          }`}
+          className={`fixed lg:relative w-[85vw] max-w-[390px] lg:w-[390px] flex flex-col z-40 h-[calc(100vh-52px)] transition-all ${
+            isNeo
+              ? 'border-r-2 border-black bg-white shadow-2xl lg:shadow-none'
+              : 'border-r border-zinc-200/70 bg-white/95 lg:bg-white/80 backdrop-blur-xl shadow-2xl lg:shadow-none'
+          } ${isMobileMenuOpen ? 'left-0' : '-left-full lg:left-0'}`}
         >
           <Sidebar
             activeTab={sidebarTab}
@@ -249,7 +282,7 @@ function ChenERDAppInner() {
         </motion.div>
 
         {/* Canvas Workspace */}
-        <div ref={diagramRef} className="flex-1 bg-[#f8fafc] relative overflow-hidden flex flex-col h-full">
+        <div ref={diagramRef} className={`flex-1 relative overflow-hidden flex flex-col h-full ${isNeo ? 'bg-[#FFFDF5]' : 'bg-[#f8fafc]'}`}>
           <MainContent
             diagram={diagram}
             isLoading={isLoading}
@@ -285,7 +318,11 @@ function ChenERDAppInner() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: 320, opacity: 0 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="fixed right-0 top-13 lg:relative lg:top-0 w-80 max-w-[85vw] border-l border-zinc-200/70 bg-white/95 lg:bg-white/90 backdrop-blur-xl shadow-2xl lg:shadow-none z-30 h-[calc(100vh-52px)]"
+              className={`fixed right-0 top-13 lg:relative lg:top-0 w-80 max-w-[85vw] z-30 h-[calc(100vh-52px)] ${
+                isNeo
+                  ? 'border-l-2 border-black bg-white shadow-2xl lg:shadow-none'
+                  : 'border-l border-zinc-200/70 bg-white/95 lg:bg-white/90 backdrop-blur-xl shadow-2xl lg:shadow-none'
+              }`}
             >
               <PropertiesPanel
                 key={selectedNode.id}
@@ -303,9 +340,11 @@ function ChenERDAppInner() {
 
 function App() {
   return (
-    <ReactFlowProvider>
-      <ChenERDAppInner />
-    </ReactFlowProvider>
+    <ThemeProvider>
+      <ReactFlowProvider>
+        <ChenERDAppInner />
+      </ReactFlowProvider>
+    </ThemeProvider>
   );
 }
 

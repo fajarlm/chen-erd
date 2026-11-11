@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
-import { FiLayers } from 'react-icons/fi';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface EntityNodeProps {
   data: {
@@ -13,43 +13,51 @@ interface EntityNodeProps {
   };
 }
 
+/**
+ * Authentic Peter Chen Entity Symbol:
+ * - Strong Entity: Single Rectangle
+ * - Weak Entity: Double Rectangle (rectangle inside rectangle)
+ */
 const EntityNode = memo(({ data }: EntityNodeProps) => {
-  const attrCount = data.attributes?.length || 0;
+  const { theme } = useAppTheme();
+  const isNeo = theme === 'neobrutalism';
 
   return (
-    <div
-      className={`group relative bg-white rounded-xl transition-all duration-200 select-none min-w-[170px] ${
-        data.isWeakEntity
-          ? 'border-4 border-double border-blue-600 shadow-md'
-          : 'border-2 border-blue-600 shadow-sm hover:shadow-md hover:border-blue-700'
-      }`}
-    >
-      {/* 4 Handles */}
-      <Handle type="target" position={Position.Top} id="top-target" className="!w-2 !h-2 !bg-blue-600 !border-white !border-2 opacity-0 group-hover:opacity-100 transition-opacity" />
-      <Handle type="source" position={Position.Top} id="top-source" className="!w-2 !h-2 !bg-blue-600 !border-white !border-2 opacity-0 group-hover:opacity-100 transition-opacity" />
-      <Handle type="target" position={Position.Bottom} id="bottom-target" className="!w-2 !h-2 !bg-blue-600 !border-white !border-2 opacity-0 group-hover:opacity-100 transition-opacity" />
-      <Handle type="source" position={Position.Bottom} id="bottom-source" className="!w-2 !h-2 !bg-blue-600 !border-white !border-2 opacity-0 group-hover:opacity-100 transition-opacity" />
-      <Handle type="target" position={Position.Left} id="left-target" className="!w-2 !h-2 !bg-blue-600 !border-white !border-2 opacity-0 group-hover:opacity-100 transition-opacity" />
-      <Handle type="source" position={Position.Left} id="left-source" className="!w-2 !h-2 !bg-blue-600 !border-white !border-2 opacity-0 group-hover:opacity-100 transition-opacity" />
-      <Handle type="target" position={Position.Right} id="right-target" className="!w-2 !h-2 !bg-blue-600 !border-white !border-2 opacity-0 group-hover:opacity-100 transition-opacity" />
-      <Handle type="source" position={Position.Right} id="right-source" className="!w-2 !h-2 !bg-blue-600 !border-white !border-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+    <div className="group relative select-none">
+      {/* 4 Handles for straight-line connections */}
+      <Handle type="target" position={Position.Top} id="top-target" className="!w-2 !h-2 !bg-black opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Handle type="source" position={Position.Top} id="top-source" className="!w-2 !h-2 !bg-black opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Handle type="target" position={Position.Bottom} id="bottom-target" className="!w-2 !h-2 !bg-black opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Handle type="source" position={Position.Bottom} id="bottom-source" className="!w-2 !h-2 !bg-black opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Handle type="target" position={Position.Left} id="left-target" className="!w-2 !h-2 !bg-black opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Handle type="source" position={Position.Left} id="left-source" className="!w-2 !h-2 !bg-black opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Handle type="target" position={Position.Right} id="right-target" className="!w-2 !h-2 !bg-black opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Handle type="source" position={Position.Right} id="right-source" className="!w-2 !h-2 !bg-black opacity-0 group-hover:opacity-100 transition-opacity" />
 
-      <div className="px-5 py-3 text-center">
-        <div className="flex items-center justify-center gap-1.5 mb-1 text-blue-600">
-          <FiLayers className="w-3.5 h-3.5" />
-          <span className="text-[10px] font-bold tracking-wider uppercase text-blue-500">
-            {data.isWeakEntity ? 'Weak Entity' : 'Entity'}
-          </span>
-        </div>
-
-        <div className="font-bold text-sm text-zinc-900 tracking-tight capitalize">
-          {data.label}
-        </div>
-
-        {attrCount > 0 && (
-          <div className="mt-1 text-[10px] font-medium text-zinc-400">
-            {attrCount} {attrCount === 1 ? 'attribute' : 'attributes'}
+      {/* Outer Rectangle */}
+      <div
+        className={`
+          min-w-[150px] min-h-[50px] px-6 py-3.5 flex items-center justify-center text-center
+          transition-all duration-150
+          ${
+            isNeo
+              ? 'border-[2.5px] border-black bg-[#FFE600] text-black font-black shadow-[4px_4px_0px_0px_#000]'
+              : 'border-2 border-zinc-900 bg-white text-zinc-900 font-bold shadow-sm'
+          }
+        `}
+      >
+        {/* If Weak Entity: Authentic Double Rectangle Inner Border */}
+        {data.isWeakEntity ? (
+          <div
+            className={`
+              w-full h-full p-2 flex items-center justify-center
+              ${isNeo ? 'border-2 border-black bg-white' : 'border border-zinc-900'}
+            `}
+          >
+            <span className="text-xs tracking-wider uppercase font-black">{data.label}</span>
           </div>
+        ) : (
+          <span className="text-xs tracking-wider uppercase font-bold">{data.label}</span>
         )}
       </div>
     </div>

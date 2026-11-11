@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
-import { FiKey } from 'react-icons/fi';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface AttributeNodeProps {
   data: {
@@ -11,45 +11,74 @@ interface AttributeNodeProps {
   };
 }
 
+/**
+ * Authentic Peter Chen Attribute Symbol:
+ * - Normal Attribute: Oval / Ellipse
+ * - Key Attribute (PK): Text inside oval is UNDERLINED
+ * - Multivalued Attribute: Double Oval (oval inside oval)
+ * - Derived Attribute: Dashed Oval
+ */
 const AttributeNode = memo(({ data }: AttributeNodeProps) => {
+  const { theme } = useAppTheme();
+  const isNeo = theme === 'neobrutalism';
+
   return (
     <div className="group relative select-none">
-      {/* 4 Handles */}
-      <Handle type="target" position={Position.Top} id="top-target" className="!w-1.5 !h-1.5 !bg-zinc-400 !border-white !border opacity-0 group-hover:opacity-100 transition-opacity" />
-      <Handle type="source" position={Position.Top} id="top-source" className="!w-1.5 !h-1.5 !bg-zinc-400 !border-white !border opacity-0 group-hover:opacity-100 transition-opacity" />
-      <Handle type="target" position={Position.Bottom} id="bottom-target" className="!w-1.5 !h-1.5 !bg-zinc-400 !border-white !border opacity-0 group-hover:opacity-100 transition-opacity" />
-      <Handle type="source" position={Position.Bottom} id="bottom-source" className="!w-1.5 !h-1.5 !bg-zinc-400 !border-white !border opacity-0 group-hover:opacity-100 transition-opacity" />
-      <Handle type="target" position={Position.Left} id="left-target" className="!w-1.5 !h-1.5 !bg-zinc-400 !border-white !border opacity-0 group-hover:opacity-100 transition-opacity" />
-      <Handle type="source" position={Position.Left} id="left-source" className="!w-1.5 !h-1.5 !bg-zinc-400 !border-white !border opacity-0 group-hover:opacity-100 transition-opacity" />
-      <Handle type="target" position={Position.Right} id="right-target" className="!w-1.5 !h-1.5 !bg-zinc-400 !border-white !border opacity-0 group-hover:opacity-100 transition-opacity" />
-      <Handle type="source" position={Position.Right} id="right-source" className="!w-1.5 !h-1.5 !bg-zinc-400 !border-white !border opacity-0 group-hover:opacity-100 transition-opacity" />
+      {/* 4 Handles for straight-line connections */}
+      <Handle type="target" position={Position.Top} id="top-target" className="!w-1.5 !h-1.5 !bg-black opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Handle type="source" position={Position.Top} id="top-source" className="!w-1.5 !h-1.5 !bg-black opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Handle type="target" position={Position.Bottom} id="bottom-target" className="!w-1.5 !h-1.5 !bg-black opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Handle type="source" position={Position.Bottom} id="bottom-source" className="!w-1.5 !h-1.5 !bg-black opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Handle type="target" position={Position.Left} id="left-target" className="!w-1.5 !h-1.5 !bg-black opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Handle type="source" position={Position.Left} id="left-source" className="!w-1.5 !h-1.5 !bg-black opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Handle type="target" position={Position.Right} id="right-target" className="!w-1.5 !h-1.5 !bg-black opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Handle type="source" position={Position.Right} id="right-source" className="!w-1.5 !h-1.5 !bg-black opacity-0 group-hover:opacity-100 transition-opacity" />
 
-      {/* Modern Oval Pill */}
+      {/* Outer Ellipse */}
       <div
         className={`
-          min-w-[96px] px-3.5 py-1.5 flex items-center justify-center gap-1.5
-          rounded-full text-center text-xs shadow-xs transition-all duration-200
+          min-w-[104px] min-h-[46px] px-4 py-2 flex items-center justify-center text-center
+          rounded-[50%] transition-all duration-150
           ${
-            data.isPrimaryKey
-              ? 'border-2 border-emerald-500 bg-emerald-50/70 text-emerald-950 font-semibold shadow-emerald-500/10'
-              : 'border border-zinc-300 bg-white/95 text-zinc-700 font-medium hover:border-zinc-400'
+            isNeo
+              ? `border-[2.5px] border-black bg-white shadow-[3px_3px_0px_0px_#000] text-black ${
+                  data.isDerived ? '!border-dashed' : ''
+                }`
+              : `border-2 border-zinc-700 bg-white shadow-xs text-zinc-900 ${
+                  data.isDerived ? '!border-dashed' : ''
+                }`
           }
-          ${data.isMultivalued ? '!border-4 !border-double !border-zinc-500' : ''}
-          ${data.isDerived ? '!border-dashed !border-zinc-400 bg-zinc-50/50' : ''}
         `}
       >
-        {data.isPrimaryKey && (
-          <FiKey className="w-3 h-3 text-emerald-600 shrink-0" />
+        {/* If Multivalued: Double Oval Inner Ellipse */}
+        {data.isMultivalued ? (
+          <div
+            className={`
+              w-full h-full px-2 py-1 rounded-[50%] flex items-center justify-center
+              ${isNeo ? 'border-2 border-black' : 'border border-zinc-700'}
+            `}
+          >
+            <span
+              className={`text-xs ${
+                data.isPrimaryKey
+                  ? 'underline underline-offset-4 decoration-2 font-bold'
+                  : 'font-medium'
+              }`}
+            >
+              {data.label}
+            </span>
+          </div>
+        ) : (
+          <span
+            className={`text-xs ${
+              data.isPrimaryKey
+                ? 'underline underline-offset-4 decoration-2 font-bold'
+                : 'font-medium'
+            }`}
+          >
+            {data.label}
+          </span>
         )}
-        <span
-          className={
-            data.isPrimaryKey
-              ? 'underline underline-offset-4 decoration-emerald-600 decoration-1.5 font-bold tracking-tight'
-              : 'tracking-tight'
-          }
-        >
-          {data.label}
-        </span>
       </div>
     </div>
   );
