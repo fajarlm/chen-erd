@@ -221,10 +221,10 @@ function ChenERDAppInner() {
           {!hasDiagram && (
             <button
               onClick={handleLoadSample}
-              className={`hidden sm:inline-flex items-center text-xs transition-all ${
+              className={`hidden sm:inline-flex items-center h-9 text-xs transition-all cursor-pointer ${
                 isNeo
-                  ? 'px-3 py-1.5 border-2 border-black bg-[#A6FAFF] text-black font-black shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none'
-                  : 'px-3.5 py-1.5 rounded-xl border border-zinc-200 text-zinc-700 hover:bg-zinc-100 font-semibold shadow-2xs active:scale-95'
+                  ? 'px-3.5 border-2 border-black bg-[#A6FAFF] text-black font-black shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none'
+                  : 'px-3.5 rounded-xl border border-zinc-200 text-zinc-700 hover:bg-zinc-100 font-semibold shadow-2xs active:scale-95'
               }`}
             >
               Sample Data

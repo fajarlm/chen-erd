@@ -244,6 +244,7 @@ const ChenDiagram: React.FC<ChenDiagramProps> = ({
         {showMinimap && (
           <MiniMap
             position="bottom-right"
+            style={{ width: 140, height: 95 }}
             nodeColor={(node) => {
               if (isNeo) {
                 switch (node.type) {

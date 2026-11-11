@@ -116,7 +116,7 @@ const ExportMenu: React.FC<ExportMenuProps> = ({ diagramRef, diagramData }) => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold transition-all
+          flex items-center gap-1.5 h-9 px-3.5 text-xs font-bold transition-all cursor-pointer
           ${
             isNeo
               ? 'bg-white text-black border-2 border-black shadow-[2px_2px_0px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none'

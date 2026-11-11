@@ -134,9 +134,9 @@ const SQLEditor: React.FC<SQLEditorProps> = ({ onExecute, isLoading }) => {
       `}
     >
       {/* Header with Title & Sample Presets */}
-      <div className={`p-3 border-b flex flex-col gap-2 ${isNeo ? 'border-black bg-[#FFE600]' : 'border-zinc-100 bg-zinc-50/70'}`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+      <div className={`p-3 border-b flex flex-col gap-2 shrink-0 ${isNeo ? 'border-black bg-[#FFE600]' : 'border-zinc-100 bg-zinc-50/70'}`}>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <div className={`p-1.5 ${isNeo ? 'border border-black bg-white shadow-[1px_1px_0px_#000]' : 'rounded-lg bg-indigo-50 text-indigo-600'}`}>
               <FiCode className="w-3.5 h-3.5" />
             </div>
@@ -145,32 +145,34 @@ const SQLEditor: React.FC<SQLEditorProps> = ({ onExecute, isLoading }) => {
             </h3>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <span className={`text-[10px] uppercase font-bold tracking-wider ${isNeo ? 'text-black' : 'text-zinc-400'}`}>
+          <div className="flex items-center gap-1.5 overflow-x-auto">
+            <span className={`text-[10px] uppercase font-bold tracking-wider shrink-0 ${isNeo ? 'text-black' : 'text-zinc-400'}`}>
               Presets:
             </span>
-            {TEMPLATES.map((tmpl) => (
-              <button
-                key={tmpl.name}
-                onClick={() => loadTemplate(tmpl.sql)}
-                className={`
-                  text-[10px] font-bold px-2 py-0.5 transition-all
-                  ${
-                    isNeo
-                      ? 'border border-black bg-white hover:bg-[#A6FAFF] text-black shadow-[1px_1px_0px_#000] active:translate-x-[1px]'
-                      : 'rounded-lg bg-white border border-zinc-200 text-zinc-600 hover:text-indigo-600 hover:border-indigo-200'
-                  }
-                `}
-              >
-                {tmpl.name}
-              </button>
-            ))}
+            <div className="flex items-center gap-1 shrink-0">
+              {TEMPLATES.map((tmpl) => (
+                <button
+                  key={tmpl.name}
+                  onClick={() => loadTemplate(tmpl.sql)}
+                  className={`
+                    text-[10px] font-bold px-2 py-1 whitespace-nowrap transition-all shrink-0
+                    ${
+                      isNeo
+                        ? 'border border-black bg-white hover:bg-[#A6FAFF] text-black shadow-[1px_1px_0px_#000] active:translate-x-[1px]'
+                        : 'rounded-lg bg-white border border-zinc-200 text-zinc-600 hover:text-indigo-600 hover:border-indigo-200 shadow-2xs'
+                    }
+                  `}
+                >
+                  {tmpl.name}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
       
       {/* Monaco Editor Container */}
-      <div className="flex-1 min-h-[300px]">
+      <div className="flex-1 min-h-[220px]">
         <Editor
           height="100%"
           defaultLanguage="sql"
@@ -190,16 +192,16 @@ const SQLEditor: React.FC<SQLEditorProps> = ({ onExecute, isLoading }) => {
       </div>
 
       {/* Full-Width Prominent Generate Button at Bottom */}
-      <div className={`p-3 border-t ${isNeo ? 'border-black bg-white' : 'border-zinc-100 bg-zinc-50/50'}`}>
+      <div className={`p-3 border-t shrink-0 ${isNeo ? 'border-black bg-white' : 'border-zinc-100 bg-zinc-50/50'}`}>
         <button
           onClick={handleExecute}
           disabled={isLoading}
           className={`
-            w-full py-2.5 text-xs font-bold flex items-center justify-center gap-2 transition-all
+            w-full h-11 px-4 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer
             ${
               isNeo
                 ? 'border-2 border-black bg-[#FFE600] text-black font-black shadow-[3px_3px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none'
-                : 'bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-xs active:scale-[0.99]'
+                : 'bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm hover:shadow active:scale-[0.99]'
             }
             ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
           `}

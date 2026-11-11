@@ -187,12 +187,12 @@ const SQLTab: React.FC<{
   const isNeo = theme === 'neobrutalism';
 
   return (
-    <div className="space-y-4">
-      <div className="h-[460px]">
+    <div className="flex flex-col h-full space-y-3">
+      <div className="flex-1 min-h-[360px]">
         <SQLEditor onExecute={onSQLExecute} isLoading={isLoading} />
       </div>
 
-      <div className={`p-3 transition-all ${isNeo ? 'bg-white border-2 border-black shadow-[2px_2px_0px_#000]' : 'border border-zinc-200/70 rounded-2xl bg-zinc-50/50'}`}>
+      <div className={`p-3 shrink-0 transition-all ${isNeo ? 'bg-white border-2 border-black shadow-[2px_2px_0px_#000]' : 'border border-zinc-200/70 rounded-2xl bg-zinc-50/50'}`}>
         <button
           onClick={() => setShowUpload(!showUpload)}
           className={`w-full flex items-center justify-between text-xs transition-colors ${isNeo ? 'font-black text-black' : 'font-semibold text-zinc-700 hover:text-zinc-950'}`}
@@ -201,7 +201,7 @@ const SQLTab: React.FC<{
             <FiUploadCloud className={`w-4 h-4 ${isNeo ? 'text-black' : 'text-indigo-500'}`} />
             <span>Upload .sql file</span>
           </span>
-          <span className="text-[10px] text-zinc-400">{showUpload ? 'Hide' : 'Show'}</span>
+          <span className="text-[10px] text-zinc-400 font-bold">{showUpload ? 'Hide' : 'Show'}</span>
         </button>
 
         {showUpload && (
@@ -274,7 +274,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 custom-scrollbar flex flex-col">
         {renderContent()}
       </div>
     </div>
